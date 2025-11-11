@@ -53,7 +53,7 @@ In short, Suzanne is motivated by the needs of individual creators who are learn
 
 ## Goals of the Project
 
-## Ethical Implications
+## Ethical Implications 
 
 This document requires that you discuss the ethical implications of your work -- no
 matter how benign you consider the outcome of your project. As several major studies
