@@ -1,55 +1,53 @@
 # Introduction
 
-Blender is a free, open-source 3D creation suite used for modeling, animation, VFX, simulation, and rendering. It is powerful enough for studios yet accessible to students and independent artists who are building skills and portfolios on limited budgets. That accessibility comes with a trade-off: the learning curve is steep. New users must juggle **Object vs. Edit Mode**, a large catalog of **operators** (Blender’s actions), a stack of **modifiers** (non-destructive effects like *Bevel* or *Subdivision Surface*), and a dense UI spread across the **3D Viewport**, **Outliner**, and **Properties** panels. In practice, even simple tasks—“bevel these edges without ruining the shading,” “add a Subdivision modifier and keep the silhouette clean,” or “set up a three-point light and render a turntable”—often devolve into 20 minutes of searching through tutorials, forum threads, and short clips that are “close but not quite” the user’s exact situation.
+Blender is a free, open-source 3D creation suite used for modeling, animation, visual effects, simulation, and rendering. It is powerful enough for studios and still accessible to students and independent artists who are building skills and portfolios on limited budgets. The tradeoff is a steep learning curve. New users juggle Object Mode versus Edit Mode, a long list of operators (the actions that do things in Blender), a stack of modifiers like Bevel or Subdivision Surface, and a dense interface split across the 3D Viewport, the Outliner, and the Properties editor. In practice, even simple tasks such as beveling edges without ruining shading or setting up a three-point light often turn into long searches through videos and forum threads that are close to the answer but not quite for the exact situation at hand.
 
-This project introduces **Suzanne**, an N-panel add-on that brings an **in-viewport learning assistant** directly into Blender. Suzanne returns **short, numbered, step-by-step instructions** that map to the exact operators and panels the user can see, so the workflow becomes: read a step → do the step → advance. It can also **transcribe an audio file** (e.g., a quick voice note describing a problem) and automatically turn that into a concise, on-screen recipe. The aim is not to replace training or long-form education, but to **reduce the “search tax”** during hands-on creation and help artists finish more work—work they can render, publish, and add to a portfolio.
+This project introduces **Suzanne**, an N-panel add-on that brings an in-viewport learning assistant directly into Blender. Suzanne returns short, numbered, step-by-step instructions that map to the exact operators and panels a user can see, so the workflow becomes: read a step, do the step, move on to the next step. It can also transcribe an audio file such as a quick voice note and turn it into a concise recipe in the panel. The goal is not to replace full courses or deep study. The goal is to reduce the time spent searching while a user is actively creating and to help artists finish more projects that they can render, publish, and add to a portfolio.
 
-**Problem statement.** Blender creators—especially beginners and self-taught artists—lose time and momentum because guidance lives **outside** the application and is rarely formatted as exact, reproducible steps for the user’s current context. **Suzanne** keeps instruction **inside** the viewport and expresses it as minimal, verifiable steps aligned to Blender’s UI, reducing context switching and improving follow-through.
+**Problem statement.** Blender creators, especially beginners and self-taught artists, lose time and momentum because guidance typically lives outside the application and is rarely written as exact, reproducible steps for the user’s current context. Suzanne keeps instruction inside the viewport and expresses it as minimal, verifiable steps that align to Blender’s interface. This reduces context switching and improves follow through.
 
-### A minimal Blender primer (to ground the steps)
+### A minimal Blender primer to ground the steps
 
-- **Where things are.** The **3D Viewport** is the work area; the **Outliner** lists scene objects; **Properties** contains contextual tabs for Object, Modifiers, Materials, Render, etc. The **N-panel** (right sidebar) hosts add-ons—this is where Suzanne lives.
-- **Modes matter.** Many tools are mode-specific. Good instructions must state **Object Mode** or **Edit Mode** up front.
-- **Operators & search.** Every action is an **operator**. You can run it via menus or press **F3** and type the operator’s name. When steps include operator names, users can reproduce them exactly.
-- **Transforms & selection.** G/R/S (+ X/Y/Z to constrain axes), A (select all), Alt-A (clear), B (box select), C (circle select). Clear steps cite these where relevant.
-- **Modifiers & order.** The **modifier stack** is non-destructive, but order changes results (e.g., *Bevel* before *Subdivision Surface* preserves crisp edges).
-- **Shading & normals.** Common fixes include *Shade Smooth*, *Auto Smooth*, and *Recalculate Normals*.
+- **Where things are.** The 3D Viewport is the work area. The Outliner lists scene objects. The Properties editor contains contextual tabs for Object, Modifiers, Materials, Render, and more. The N-panel on the right hosts add-ons. This is where Suzanne lives.
+- **Modes matter.** Many tools are mode specific. Clear instructions should state Object Mode or Edit Mode up front.
+- **Operators and search.** Every action is an operator. You can trigger it from a menu or press **F3** and type the operator name. Using operator names in steps makes them easy to reproduce.
+- **Transforms and selection.** G, R, and S handle move, rotate, and scale. Add X, Y, or Z to constrain an axis. A selects all. Alt A clears selection. B and C trigger box and circle select. Steps should cite these when relevant.
+- **Modifiers and order.** The modifier stack is non destructive, but order changes results. For example, applying Bevel before Subdivision Surface can preserve crisp edges.
+- **Shading and normals.** Common fixes include Shade Smooth, Auto Smooth, and Recalculate Normals.
 
-### How individuals actually use Blender—and why that matters for portfolios
+### How individuals actually use Blender and why that matters for portfolios
 
-For students and independent creators, portfolios are built project by project: a clean hard-surface prop, a short animation, a stylized character, a product visualization, a shader study, and so on. Each piece requires many small, correct steps strung together efficiently. The friction usually isn’t a lack of high-level understanding; it’s **micro-blocked execution**: “Which tab is *Auto Smooth* in again?”, “Why did my bevel collapse?”, “What’s the quickest way to light this with area lights and get a decent rim?” When the correct next step is unclear, many artists tab out to search, see five different answers, and lose 30 minutes testing the wrong one.
+Students and independent creators build portfolios piece by piece. A clean hard surface prop, a short animation, a stylized character, a product visualization, or a shader study can all become strong entries. Each piece requires many small and correct steps in sequence. The main blocker is not always a lack of big picture knowledge. The blocker is micro level execution. Which tab holds Auto Smooth. Why a bevel collapsed. How to light a small scene quickly with area lights so the forms read.
 
-Suzanne targets these micro-blocks. Because it lives in the N-panel, a creator can stay in flow:
+Suzanne targets these micro blocks. Because it lives in the N-panel, a creator can stay in flow.
 
-- “**Fix faceted shading** on a beveled object”
-  1. *Object Mode* → Right-click → **Shade Smooth**
-  2. **Properties → Object Data (green triangle) → Normals → Auto Smooth** ✓
-  3. If still faceted: *Edit Mode* → **A** → **Mesh → Normals → Recalculate Outside**
+- **Fix faceted shading on a beveled object**
+  1. Object Mode, right click, **Shade Smooth**
+  2. Properties, Object Data (green triangle), Normals, enable **Auto Smooth**
+  3. If the object still looks faceted, switch to Edit Mode, press **A**, then Mesh, Normals, **Recalculate Outside**
 
-- “**Add Subdivision Surface without changing silhouette**”
-  1. *Object Mode* → **Modifiers (wrench)** → **Add Modifier → Bevel**
-  2. Set **Limit Method = Angle**, tweak **Segments = 2** and **Amount** until edges read correctly
-  3. Add **Subdivision Surface** **below** Bevel (keep order Bevel → Subdivision)
-  4. **Viewport Level = 2**, **Render Level = 3–4** depending on performance
+- **Add Subdivision Surface without changing the silhouette**
+  1. Object Mode, Modifiers (wrench), **Add Modifier**, **Bevel**
+  2. Set Limit Method to Angle, set Segments to 2, and adjust Amount until edges read correctly
+  3. Add **Subdivision Surface** below Bevel so the order is Bevel then Subdivision
+  4. Set Viewport Level to 2 and Render Level to 3 or 4 based on performance
 
-These are short, **portfolio-enabling** steps: they stabilize geometry, improve surface quality, and make renders “read” better. Repeated across weeks, they compound into cleaner topology, faster lighting setups, and more confident scene assembly—exactly the qualities hiring managers and faculty look for in portfolios and demo reels. By converting fuzzy advice into **actionable, in-tool recipes**, Suzanne helps individuals produce finished work faster, increasing the cadence of publishable pieces (ArtStation posts, Instagram reels, short breakdown videos, and GitHub-hosted process write-ups).
+These short recipes produce portfolio quality improvements. They stabilize geometry, improve surface quality, and make renders read better. Repeated across weeks, they lead to cleaner topology, faster lighting setups, and more confident scene assembly. Those qualities are visible in wireframes, clay renders, turntables, and final beauty passes. They are also what faculty reviewers and hiring managers look for. Because steps reference operators and panels explicitly, they are easy to document in a case study. A student can capture screenshots, annotate each step, and include the process alongside final images.
 
-Beyond speed, **consistency** matters. Numbered steps make it easy to reproduce a look (“my bevel/subsurf stack”) across multiple assets, which gives a portfolio a coherent style instead of one-off experiments. And because steps reference operators and panels explicitly, they translate well into documentation and case studies: a student can capture screenshots, annotate the recipe, and include it alongside wireframes, clay renders, and beauty passes.
-
-Finally, Blender’s open ecosystem means many learners operate on varied hardware and versions. Suzanne’s focus on **clear prerequisites** (mode, selection, panel) and **light troubleshooting forks** (“If faceted → Auto Smooth; else continue”) lowers frustration across these differences. That keeps more artists shipping more pieces, which is the single most important variable in portfolio growth.
+Blender’s open ecosystem also means users run different versions and hardware. Suzanne focuses on clear prerequisites such as mode and selection and includes light troubleshooting branches such as “If faceted, turn on Auto Smooth.” This lowers frustration across setups and helps more artists keep shipping new work, which is the most important factor in portfolio growth.
 
 ## Motivation
 
-The motivation for Suzanne is practical and learner-centered: to **keep guidance where the work happens** and express it in the smallest useful unit—**verified steps**—so that individuals can create more (and better) art with the time they have.
+The motivation for Suzanne is practical and student centered. The goal is to keep guidance where the work happens and express it in the smallest useful unit, which is a verified step. That way individuals can create more and better art with the time they have.
 
-- **Reduce context switching.** Leaving Blender to parse long videos and scattered forum posts breaks concentration and wastes time. By staying in the viewport, a creator can read a step and immediately perform it, preserving mental state and camera/context.
-- **Accelerate “first wins.”** Early success drives confidence. A beginner who can bevel cleanly, fix shading, set up a basic three-point light, and render a turntable in the first sessions is more likely to continue—and to post work. Suzanne aims to make those first wins **repeatable**.
-- **Support self-directed learning.** Many portfolio-builders learn evenings and weekends, weaving Blender into busy schedules. Short, accurate steps reduce the overhead of “getting back into it” after a break and make progress visible every session.
-- **Improve reproducibility for case studies.** Portfolios that include **process**—before/after renders, topology views, modifier settings—stand out. Suzanne’s operator-named steps double as documentation artifacts (easy to paste into a project README, blog, or slide).
-- **Enable accessibility and different learning styles.** Some creators prefer to **speak** their intent (“make this smooth but keep edges sharp”) or struggle with exact English terminology. File-based audio transcription lets them describe the issue naturally and still receive precise, structured steps.
-- **Prepare for evaluation and growth.** Because the instructions are structured, it’s straightforward to measure **time-on-task** and **accuracy** in a small study (e.g., “bevel + subsurf + smooth shading” task). Those measurements guide future iterations—like adding “next/back” buttons, live mic capture, or tool-calling to safely run common operators.
+- **Reduce context switching.** Leaving Blender to parse long videos and scattered forum posts breaks concentration and wastes time. By staying in the viewport, a creator can read a step and immediately perform it while keeping the camera, selection, and mental state intact.
+- **Accelerate first wins.** Early success builds confidence. A beginner who can bevel cleanly, fix shading, set up a basic three point light, and render a turntable in the first sessions is more likely to continue and to post work. Suzanne aims to make those early wins repeatable.
+- **Support self directed learning.** Many portfolio builders learn in short sessions. Clear and numbered steps reduce the overhead of getting back into a scene after a break and make progress visible every time they open Blender.
+- **Improve reproducibility for case studies.** Portfolios that include process stand out. Before and after renders, topology views, and modifier settings are stronger when they are tied to named operators and exact paths. Suzanne’s steps double as documentation that is easy to paste into a README, a blog post, or slides.
+- **Enable different learning styles.** Some creators prefer to speak their intent or struggle with precise English terminology. File based audio transcription lets them describe the issue naturally and still receive precise, structured steps.
+- **Prepare for evaluation and growth.** Since the instructions are structured, it is straightforward to measure time on task and accuracy in a small study. Those measurements unlock future improvements such as next and back buttons, live microphone capture, or tool calling for safe operator execution.
 
-In short, Suzanne is motivated by the needs of **individual creators** who are learning Blender while actively building a body of work. By turning scattered knowledge into **in-app, actionable recipes**, Suzanne helps artists finish more projects, present them cleanly, and **grow their portfolios** with consistent, higher-quality pieces.
+In short, Suzanne is motivated by the needs of individual creators who are learning Blender while they build a body of work. By turning scattered knowledge into in app, actionable recipes, Suzanne helps artists finish more projects, present them cleanly, and grow portfolios with consistent and higher quality pieces.
 
 ## Current State of the Art
 
