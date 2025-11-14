@@ -147,6 +147,6 @@ Although this project looks benign, it still raises ethical questions that I nee
 - Whitelisted operators and safe API calls, plus reliance on the undo stack.
 - Consent reminders for transcription. Anonymized evaluation data only.
 - Inclusive, concise step language, with future support for multilingual prompts.
-- Clear cost and rate limit messaging, with guidance on model selection.
+- Clear cost and rate limit messaging, with guidance on model selection. 
 
 The aim is not only to teach Blender more efficiently but also to do so in a way that respects privacy, keeps the user in control, and maintains scene integrity. By combining careful UX with explicit guardrails, the assistant supports learning while minimizing the risks that come with automation and third party AI services.
