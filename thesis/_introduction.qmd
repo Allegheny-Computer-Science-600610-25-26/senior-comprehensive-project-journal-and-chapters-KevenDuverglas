@@ -8,10 +8,7 @@ This project introduces **Suzanne**, an N-panel add-on that brings an in-viewpor
 
 ### Why Blender feels complex at first
 
-![Blender interface with key areas visible: 3D Viewport (center), Outliner (right), Properties (bottom-right), and the N-panel (right sidebar).](https://upload.wikimedia.org/wikipedia/commons/3/34/Blender-save-default-settings.png){fig-cap="The Blender interface presents many panels and modes. Beginners must juggle operators, modifier order, and context. This project targets that ramp-up." width=100%}
-
-*Attribution:* Image via Wikimedia Commons, licensed **CC BY-SA** (credit: Blender Foundation contributors). Source: https://commons.wikimedia.org/wiki/File:Blender-save-default-settings.png.  
-For a version tied to current UI labels, see the **Blender Manual → User Interface**. [@blender-manual]
+![Blender interface with key areas visible: 3D Viewport (center), Outliner (right), Properties (bottom-right), and the N-panel (right sidebar).](images/blender_ui.png){fig-cap="The Blender interface presents many panels and modes. Beginners must juggle operators, modifier order, and context. Screenshot by the author." width=100%}
 
 ### A minimal Blender primer to ground the steps
 
