@@ -6,6 +6,13 @@ This project introduces **Suzanne**, an N-panel add-on that brings an in-viewpor
 
 **Problem statement.** Blender creators, especially beginners and self-taught artists, lose time and momentum because guidance typically lives outside the application and is rarely written as exact, reproducible steps for the user’s current context. Suzanne keeps instruction inside the viewport and expresses it as minimal, verifiable steps that align to Blender’s interface. This reduces context switching and improves follow through.
 
+### Why Blender feels complex at first
+
+![Blender interface with key areas visible: 3D Viewport (center), Outliner (right), Properties (bottom-right), and the N-panel (right sidebar).](https://upload.wikimedia.org/wikipedia/commons/3/34/Blender-save-default-settings.png){fig-cap="The Blender interface presents many panels and modes. Beginners must juggle operators, modifier order, and context. This project targets that ramp-up." width=100%}
+
+*Attribution:* Image via Wikimedia Commons, licensed **CC BY-SA** (credit: Blender Foundation contributors). Source: https://commons.wikimedia.org/wiki/File:Blender-save-default-settings.png.  
+For a version tied to current UI labels, see the **Blender Manual → User Interface**. [@blender-manual]
+
 ### A minimal Blender primer to ground the steps
 
 - **Where things are.** The 3D Viewport is the work area. The Outliner lists scene objects. The Properties editor contains contextual tabs for Object, Modifiers, Materials, Render, and more. The N-panel on the right hosts add-ons. This is where Suzanne lives.
@@ -40,6 +47,10 @@ Blender’s open ecosystem also means users run different versions and hardware.
 
 The motivation for Suzanne is practical and student centered. The goal is to keep guidance where the work happens and express it in the smallest useful unit, which is a verified step. That way individuals can create more and better art with the time they have.
 
+A personal note on why I am building this. I have been using Blender for about five years. When I first started, it took me roughly four to five months just to feel comfortable with the basics and to understand where tools lived in the interface. I spent a lot of time bouncing between videos, forum posts, and trial and error. If I had an assistant sitting inside Blender that answered “where is this” and “what do I click next” with short steps, I am confident that ramp up would have been much faster. Suzanne is my attempt to make that early phase easier for the next wave of students and independent artists.
+
+To keep answers accurate and consistent with Blender’s own language, I plan to ground the assistant in the Blender Manual. The idea is to index key sections of the manual and retrieve relevant passages whenever a user asks a question, then generate clear, numbered steps that use the same operator names and panel labels the manual uses. When possible the assistant will point to the exact manual page so beginners can read more. I will also review licensing and attribution so that using manual content stays within acceptable use and gives credit back to the official docs.
+
 - **Reduce context switching.** Leaving Blender to parse long videos and scattered forum posts breaks concentration and wastes time. By staying in the viewport, a creator can read a step and immediately perform it while keeping the camera, selection, and mental state intact.
 - **Accelerate first wins.** Early success builds confidence. A beginner who can bevel cleanly, fix shading, set up a basic three point light, and render a turntable in the first sessions is more likely to continue and to post work. Suzanne aims to make those early wins repeatable.
 - **Support self directed learning.** Many portfolio builders learn in short sessions. Clear and numbered steps reduce the overhead of getting back into a scene after a break and make progress visible every time they open Blender.
@@ -47,27 +58,89 @@ The motivation for Suzanne is practical and student centered. The goal is to kee
 - **Enable different learning styles.** Some creators prefer to speak their intent or struggle with precise English terminology. File based audio transcription lets them describe the issue naturally and still receive precise, structured steps.
 - **Prepare for evaluation and growth.** Since the instructions are structured, it is straightforward to measure time on task and accuracy in a small study. Those measurements unlock future improvements such as next and back buttons, live microphone capture, or tool calling for safe operator execution.
 
-In short, Suzanne is motivated by the needs of individual creators who are learning Blender while they build a body of work. By turning scattered knowledge into in app, actionable recipes, Suzanne helps artists finish more projects, present them cleanly, and grow portfolios with consistent and higher quality pieces.
+In short, Suzanne is motivated by the needs of individual creators who are learning Blender while they build a body of work. By turning scattered knowledge into in app, actionable recipes and aligning answers with the Blender Manual, Suzanne helps artists finish more projects, present them cleanly, and grow portfolios with consistent and higher quality pieces.
 
 ## Current State of the Art
 
+Blender learners mostly rely on resources that live outside the viewport: long-form YouTube tutorials, forum threads, Discord servers, and the official Blender Manual [@blender-manual]. These are great when you want deep background, but they are inefficient when you only need the next two or three exact steps. Inside Blender, the UI is powerful but dense. Many actions depend on mode, selection, and context. Even small differences like modifier order or normal settings can change results. That is why a lot of beginners end up tabbing out to search, testing multiple suggestions, and losing momentum.
+
+There are helpful patterns in the current ecosystem. The Blender Manual documents operators, shortcuts, and panels in a precise way, and it is the baseline source for definitions and expected behavior [@blender-manual]. Many creators publish “recipe” style posts or short clips that show numbered steps, but these are still external to the tool. A few add-ons improve workflow by exposing common operators or presets, but they usually do not explain how to do a task in clear, reproducible language that maps to operator names and panel paths. In creative software more broadly, AI copilots are becoming common, especially for coding and writing. Those tools suggest edits in context and reduce context switching. Blender currently lacks a consistent, in-viewport learning assistant that returns short, verified steps and can also act on those steps when the user approves them.
+
+The gap I am addressing is simple to state. Learners need guidance that is both in the right place and in the right format. In the right place means inside the N-panel while they are working. In the right format means numbered steps that use Blender’s own terminology and operators, include minimal prerequisites like mode and selection, and include quick troubleshooting branches when common issues appear. For advanced users, there is an additional opportunity. When the steps are clear, the assistant should be able to run safe code in Blender to create geometry, add modifiers, set up cameras and lights, or build node graphs in shading, all under user control. Suzanne targets both needs. It teaches by iterating through steps, and when asked, it can execute well scoped code to carry out those steps.
+
 ## Goals of the Project
 
-## Ethical Implications 
+**High level goal.** Build an in-Blender learning assistant that teaches by iterating through short, numbered steps and can optionally run code in Blender to apply those steps to the 3D scene or the shading context, always with user approval.
 
-This document requires that you discuss the ethical implications of your work -- no
-matter how benign you consider the outcome of your project. As several major studies
-of ethical issues in computer science assert: _no project is completely value-neutral_.
+**Teaching goals**
+- Return clear, step-by-step instructions that map to Blender operators and panel paths. Each step includes any required prerequisites such as Object Mode or Edit Mode, selection state, or object type.
+- Support iteration during learning. Users can request the next step, repeat a step, or ask for a quick branch when something looks wrong. The assistant restates context when needed so the user does not get lost.
+- Provide minimal troubleshooting at decision points. For example, if shading looks faceted, suggest Shade Smooth and Auto Smooth, then recalculation of normals if needed.
 
-To assist you in elaborating on these issues, the following areas are topics you might
-consider addressing. You do not need to address all of them.
+**Execution goals**
+- Add a safe execution pathway that can run code snippets in Blender to model objects, add modifiers, create cameras and lights, or set up basic node trees in the Shader Editor. For example, create a beveled cube, add a Subdivision Surface modifier, place a sun and two area lights, and set Eevee or Cycles settings for a quick turntable.
+- Keep execution opt-in and transparent. Show the code, explain what it will do, and require confirmation. Use Blender’s undo stack and offer a quick revert path.
+- Provide guardrails. Limit execution to a vetted set of APIs and operators, check for mode and selection, and fail safely with readable error messages when the scene state does not match the assumptions.
 
-* Information Privacy
-* Information Accuracy (e.g. can contain reliability)
-* Potential Misuse (e.g. computer crime, unintended consequences)
-* Second- or Third-Party Risk (e.g. safety)
-* Data Collection Issues (e.g. issues inherent in collecting data)
-* Algorithmic or Data Bias
-* Potential Power Difference / Social Imbalance / Issues in Equity
+**Documentation and reproducibility**
+- Document all features with short copies of the same numbered steps the assistant returns. Use operator names and panel paths so the documentation doubles as training material.
+- Ship a Quarto site for the research journal and a tagged PDF release for the thesis so readers and graders can reproduce the build process.
 
-In addition, reflect on ways that the above harms can be or are mitigated by your work.
+**Evaluation**
+- Run a small study comparing baseline web searching to Suzanne on a few common tasks such as bevel plus subdivision with smooth shading, a basic three-point lighting setup, and a simple shader graph. Measure time on task, error count, and user ratings of usefulness and learnability.
+
+**Success criteria**
+- Median time on task decreases relative to the baseline for at least two of the selected tasks.
+- Participants rate the assistant as more useful than web searching for just-in-time guidance.
+- Code execution is adopted by participants without negative impact on trust or scene integrity, and any failures are easy to undo.
+
+## Ethical Implications
+
+Although this project looks benign, it still raises ethical questions that I need to address. The main areas are privacy, accuracy and reliability, potential misuse, third-party risk, data collection, bias, and equity. I describe the issues briefly and then list the mitigation steps I will implement in the add-on and in the documentation.
+
+**Information privacy**
+- The add-on uses the OpenAI API. That means prompts, and in the case of transcription, audio files, can be sent to a third party service. API keys are sensitive as well.
+- **Mitigations.** The panel stores the API key locally for the current .blend or reads it from an environment variable. Keys are never committed to the repository. The add-on does not log user prompts or audio content to disk. The documentation instructs users to avoid sending sensitive or confidential audio. For classroom use, I will include a short consent note and a reminder about file content.
+
+**Information accuracy and reliability**
+- Large language models can return incorrect or incomplete steps. Executing code makes this risk more obvious because a wrong instruction can alter a scene.
+- **Mitigations.** The assistant writes numbered steps with explicit prerequisites such as mode and selection, which reduces accidental misuse. The UI uses verify-before-apply language and asks for confirmation before running any code. The execution path is limited to a whitelisted set of safe operators and API calls, and it always pushes to the undo stack so the user can revert immediately. Error messages are descriptive and point to likely fixes.
+
+**Potential misuse and unintended consequences**
+- There is a risk that users over-rely on the assistant instead of learning the fundamentals. There is also a small risk of destructive changes if someone approves code without reading it.
+- **Mitigations.** Keep the user in control. Execution is opt-in and visible. Show the code before it runs and summarize its effect in plain language. Recommend saving the file before any operation that changes topology. Include toggles to restrict actions to non-destructive operations like adding modifiers rather than applying them.
+
+**Second- or third-party risk**
+- If a user transcribes audio that includes someone else, there are consent and privacy concerns.
+- **Mitigations.** The documentation requires users to only transcribe audio they own or for which they have permission. The add-on shows a reminder near the file selector about consent and privacy.
+
+**Data collection issues**
+- The project does not collect user data for analytics. During the evaluation, I will collect timing and task outcome data with IRB-style consent if required by the course, and I will anonymize the results.
+- **Mitigations.** No content logging in the add-on. For the study, store only what is needed for analysis. Do not record audio content. Do not store API keys.
+
+**Algorithmic or data bias**
+- Model outputs can reflect biases. In this project the main risk is instructional quality or tone that is not inclusive.
+- **Mitigations.** Keep responses concise and neutral. Encourage multiple valid ways to accomplish a task when appropriate. Plan future work for multilingual prompts so non-native English speakers can get help in their preferred language.
+
+**Power differences and equity**
+- Expensive software and paid training can be barriers. Blender is free, but time is also a barrier when learning is slow. Suzanne tries to lower that barrier by giving just-in-time steps.
+- **Mitigations.** Keep the add-on open source with a permissive license. Document everything with operator names so learners can copy the steps even without the assistant. Avoid features that require paid keys to even open the panel. Be clear about potential API costs and rate limits so students are not surprised.
+
+**OpenAI specific considerations**
+- The service can change models, pricing, or rate limits, and outages can occur.
+- **Mitigations.** Provide clear error messages for key errors, quota errors, and timeouts. Expose model choices in the panel so users can select smaller, cheaper models when appropriate. Add guidance in the docs on how to test prompts offline by consulting the Blender Manual and running operators directly [@blender-manual].
+
+**Security and supply chain**
+- Executing code in Blender is powerful. It must not allow arbitrary system access or file writes outside Blender’s normal operations.
+- **Mitigations.** Scope execution to Blender’s Python API calls that manipulate scene data, objects, and nodes. Avoid file system access and network calls from generated code. Document the allowed API surface and keep it small. Encourage users to inspect code before running.
+
+**Summary of mitigations**
+- Local entry of API keys and no secrets in the repository.
+- No content logging. Clear warnings about sending sensitive audio.
+- Verify-before-apply language and user confirmation before any execution.
+- Whitelisted operators and safe API calls, plus reliance on the undo stack.
+- Consent reminders for transcription. Anonymized evaluation data only.
+- Inclusive, concise step language, with future support for multilingual prompts.
+- Clear cost and rate limit messaging, with guidance on model selection.
+
+The aim is not only to teach Blender more efficiently but also to do so in a way that respects privacy, keeps the user in control, and maintains scene integrity. By combining careful UX with explicit guardrails, the assistant supports learning while minimizing the risks that come with automation and third party AI services.
