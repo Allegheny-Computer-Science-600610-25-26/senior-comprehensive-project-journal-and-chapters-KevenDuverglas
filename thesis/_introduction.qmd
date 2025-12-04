@@ -22,7 +22,7 @@ This project introduces **Suzanne**, a Blender add-on that lives in the right-ha
 
 - **Grounding.** Retrieval-Augmented Generation (RAG) combines large language models with authoritative sources. Integrating RAG ensures instructional steps match Blender’s official terminology and correct behavior [@gao2023retrieval].
 
-## Motivation (why this matters for students and portfolios)
+## Motivation (why this matters for students and portfolios) 
 
 In my personal experience learning Blender over the past five years, most challenges involved “micro-execution”—not understanding the concept of what to do, but figuring out *which* operator to call, *what* mode to be in, and *what* order to perform actions. Research has shown that Blender’s growing scope and tool density can overwhelm newcomers and slow their learning process [@soni2023blenderreview]. Even small tasks such as beveling edges without shading artifacts or setting up lighting often require watching multiple tutorials or searching through forums.
 
