@@ -12,18 +12,18 @@ format:
 natbiboptions: numbers
 # EDIT AT YOUR OWN PERIL #
 
-title: Suzanne: A Blender Assistant
+title: Senior Thesis Title
 
-firstreader: Janyl Jumadinova
-secondreader: Douglas Luman
+firstreader: First Reader
+secondreader: Second Reader
 
 bibliography: references.bib
 
 author:
-  - name: Keven Michel Duverglas
+  - name: A. Student
     affiliation:
       name: Allegheny College
-      address: 520 N. Main St., 337
+      address: 520 N. Main St., Box Q
       city: Meadville
       state: Pennsylvania
       country: USA
