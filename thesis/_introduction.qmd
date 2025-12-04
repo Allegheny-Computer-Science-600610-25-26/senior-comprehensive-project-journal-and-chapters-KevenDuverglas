@@ -1,6 +1,6 @@
 # Introduction
 
-## 1. Project overview
+## Project overview
 
 Blender is a free, open-source 3D creation suite used for modeling, animation, effects, simulation, and rendering [@blender-manual; @soni2023blenderreview]. It powers professional production pipelines and is increasingly used in research, engineering, and higher education. Studies show that Blender’s Python architecture, open-source licensing, and advanced rendering capabilities make it suitable even for scientific and engineering workflows, such as generating synthetic digital image correlation images for computational experiments [@rohe2022syntheticdic]. Because Blender is both powerful and freely available, it is widely adopted by students, independent artists, and early-career creators building portfolios on limited budgets.
 
@@ -10,9 +10,7 @@ This project introduces **Suzanne**, a Blender add-on that lives in the right-ha
 
 ![Blender interface with key areas visible: 3D Viewport (center), Outliner (right), Properties (bottom-right), and the N-panel (right sidebar).](images/blender_ui.png){fig-cap="Figure 1. The Blender interface. Beginners juggle regions, modes, operators, and modifier order. Screenshot by the author." width=100%}
 
----
-
-## 2. Key terms and concepts (grounding the reader)
+## Key terms and concepts (grounding the reader)
 
 - **N-panel.** A vertical sidebar toggled with **N** in the 3D Viewport hosting add-ons and tools. Suzanne is located here to keep guidance directly inside the creative workspace [@blender-manual].
 
@@ -24,9 +22,7 @@ This project introduces **Suzanne**, a Blender add-on that lives in the right-ha
 
 - **Grounding.** Retrieval-Augmented Generation (RAG) combines large language models with authoritative sources. Integrating RAG ensures instructional steps match Blender’s official terminology and correct behavior [@gao2023retrieval].
 
----
-
-## 3. Motivation (why this matters for students and portfolios)
+## Motivation (why this matters for students and portfolios)
 
 In my personal experience learning Blender over the past five years, most challenges involved “micro-execution”—not understanding the concept of what to do, but figuring out *which* operator to call, *what* mode to be in, and *what* order to perform actions. Research has shown that Blender’s growing scope and tool density can overwhelm newcomers and slow their learning process [@soni2023blenderreview]. Even small tasks such as beveling edges without shading artifacts or setting up lighting often require watching multiple tutorials or searching through forums.
 
@@ -44,9 +40,7 @@ Suzanne aims to address this gap: **deliver high-clarity, minimal-step instructi
 
 This approach is supported by educational research showing that AI-based learning tools improve cognitive outcomes when instructional content is concise, context-specific, and directly actionable [@luo2025ailearningtools]. Suzanne follows these principles by placing guidance beside the active viewport and presenting it as small, verifiable steps that can be performed immediately.
 
----
-
-## 4. Problem statement (what gap this work addresses)
+## Problem statement (what gap this work addresses)
 
 Blender learners lose time, motivation, and project momentum because most guidance lives **outside** the application, spread across long YouTube videos, scattered forum posts, or generic documentation. These sources are rarely tailored to the user’s current mode, object selection, or workflow context. As a result, beginners struggle with:
 
@@ -66,9 +60,7 @@ This project addresses that gap by building an in-viewport assistant that:
 
 Because Blender is increasingly used in research and engineering [@rohe2022syntheticdic], reliable execution and clear documentation also support academic reproducibility.
 
----
-
-## 5. Project goals (what this thesis will deliver)
+## Project goals (what this thesis will deliver)
 
 1. **Step-based teaching.** Provide concise, numbered instructions that reflect Blender’s operator names and panel paths, always stating prerequisites (mode, selection, object type).
 
@@ -82,9 +74,7 @@ Because Blender is increasingly used in research and engineering [@rohe2022synth
 
 6. **Evaluation.** Compare Suzanne to baseline search-driven workflows for time-on-task, accuracy, and perceived usefulness.
 
----
-
-## 6. Assumptions, limitations, and delimitations
+## Assumptions, limitations, and delimitations
 
 ### **Assumptions**
 - Users have Blender installed and can access the N-panel [@blender-manual].  
@@ -101,9 +91,7 @@ Because Blender is increasingly used in research and engineering [@rohe2022synth
 - No microphone-based live transcription in v0.x.  
 - No end-user analytics are collected; study participation is voluntary and anonymized.
 
----
-
-## 7. Ethical considerations (narrative)
+## Ethical considerations (narrative)
 
 ### **Privacy and consent**
 Submitted prompts and audio files are processed through a third-party API. Research shows that LLMs face serious risks related to privacy, data leakage, and unintended memorization of sensitive content [@daspaper2025llmsecurity]. Suzanne therefore stores API keys only locally, never logs prompt content, and provides explicit warnings about avoiding sensitive material.
@@ -120,15 +108,11 @@ LLM providers may change pricing or rate limits. Suzanne surfaces clear error me
 ### **Security and scope**
 Because unrestricted Python execution can cause harm, Suzanne restricts script generation to object creation, transforms, lights, cameras, and shader nodes—avoiding file operations or network calls. This aligns with security recommendations for limiting LLM-driven code execution and potential attack surfaces [@daspaper2025llmsecurity].
 
----
-
-## 8. What does *not* belong in the Introduction
+## What does *not* belong in the Introduction
 
 Practical modeling recipes, shading fixes, or operator sequences should not be included here. These belong in **Methods** or an **Appendix**, where Suzanne’s generated steps can be presented clearly. The Introduction is focused on background, motivation, problem definition, goals, scope, and ethics.
 
----
-
-## 9. Chapter roadmap
+## Chapter roadmap
 
 The remainder of this thesis proceeds as follows:
 
