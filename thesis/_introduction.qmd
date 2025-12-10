@@ -77,19 +77,63 @@ Because Blender is increasingly used in research and engineering [@rohe2022synth
 ## Assumptions, limitations, and delimitations
 
 ### **Assumptions**
-- Users have Blender installed and can access the N-panel [@blender-manual].  
-- Users consent to API usage when submitting text or audio for transcription.  
-- English-language UI labels are acceptable in the initial release.
+
+This project rests on several practical assumptions about the environment in which Suzanne is used and the people who choose to install it:
+
+- **Installed Blender and access to the N-panel.**  
+  It is assumed that users already have a working installation of Blender and understand how to access the right-hand N-panel in the 3D Viewport [@blender-manual]. Suzanne is implemented as an N-panel add-on rather than a standalone application, so users must be able to enable add-ons, save .blend files, and navigate basic interface regions. The project does not attempt to teach operating-system installation, GPU drivers, or basic Blender navigation from scratch.
+
+- **Informed consent for API usage.**  
+  When users submit text or audio to Suzanne’s AI features, those requests are processed through a third-party API. The system assumes that users are aware of this and consent to it at the point of configuration—specifically, when they paste an API key into the add-on preferences and enable AI-driven features. The design presumes that users (or instructors, in a classroom setting) have reviewed relevant institutional or personal policies regarding the use of external AI services.
+
+- **English-language interface as the baseline.**  
+  The initial release assumes that Blender’s UI is set to English and that users can work with English operator names, menu labels, and instructions. Suzanne’s retrieval pipeline targets the English Blender Manual [@blender-manual], and the language model is prompted to mirror that vocabulary. Multilingual support and localization are identified as important directions for future work but are not treated as requirements for the first version.
+
+- **Intermediate technical comfort.**  
+  Although Suzanne targets novices in terms of Blender skill, it assumes a basic level of technical comfort: users can install add-ons, manage API keys, and understand the idea of “saving before running code.” The system does not, for example, guide users through package manager installation, shell configuration, or advanced debugging.
+
 
 ### **Limitations**
-- LLM-generated steps may contain inaccuracies; grounding mitigates but does not eliminate this [@gao2023retrieval].  
-- Code execution is restricted to a safe subset of Blender’s Python API.  
-- Behavior may vary across Blender versions and hardware setups [@blender-manual].
+
+Despite careful design choices, Suzanne has several important limitations that shape how its results should be interpreted:
+
+- **Residual inaccuracy in LLM-generated steps.**  
+  Grounding on the Blender Manual and using retrieval-augmented generation improves factuality and terminology alignment, but it does not eliminate mistakes [@gao2023retrieval]. The model may still suggest slightly outdated menu paths, omit necessary steps, or assume a different initial selection than the user has. Users are therefore advised to treat Suzanne’s instructions as **high-quality suggestions**, not guaranteed truths, and to cross-check against the Manual or their own experience when something appears wrong.
+
+- **Restricted code execution scope.**  
+  For safety reasons, code execution is intentionally limited to a safe subset of Blender’s Python API, focusing on object creation, transforms, lights, cameras, and shader nodes. While this reduces the risk of destructive or security-sensitive operations, it also means that Suzanne cannot assist with every possible automation scenario. Advanced scripting tasks—such as complex rigging tools, file I/O, or integration with external render farms—are explicitly out of scope for the current version.
+
+- **Version- and hardware-dependent behavior.**  
+  Blender evolves rapidly, and operator locations, defaults, or UI layouts can change between releases [@blender-manual]. Suzanne targets a specific range of Blender versions during development; outside that range, some instructions may no longer match the interface exactly. Similarly, behavior can vary by platform (Windows, macOS, Linux) and hardware configuration (GPU vs CPU, different input devices). The project cannot guarantee identical behavior across all environments, and some user-reported issues may stem from these external differences.
+
+- **Limited awareness of scene context.**  
+  Suzanne has only partial visibility into the user’s scene state. While future versions might integrate deeper inspection tools, the current implementation often infers context from user prompts and a small set of requested scene details. This can lead to misalignment when the scene contains unusual setups (e.g., non-standard hierarchies, heavily customized keymaps, or add-on-specific data structures).
+
+- **Evaluation scope.**  
+  The evaluation described later in this thesis is constrained to a limited number of tasks, users, and time. Results about time-on-task, perceived usefulness, or error reduction should be interpreted as **initial evidence**, not definitive proof of general effectiveness across all Blender workflows or learner populations.
+
 
 ### **Delimitations**
-- Focus on learnability, modeling, shading, and presentation—not advanced rigging or simulation.  
-- No microphone-based live transcription in v0.x.  
-- No end-user analytics are collected; study participation is voluntary and anonymized.
+
+In addition to inherent limitations, the project also includes deliberate **design choices** that narrow its scope. These delimitations are not weaknesses, but boundaries set so the work remains feasible and coherent:
+
+- **Focus on learnability, modeling, shading, and presentation.**  
+  Suzanne is explicitly aimed at core workflows that support beginner and intermediate portfolio pieces: modeling (especially hard-surface and simple organic forms), shading, lighting, and basic presentation (turntables, still renders). Advanced areas such as character rigging, complex simulation (fluids, cloth, smoke), geometry nodes systems, and compositing are intentionally left out of the initial feature set. This allows the project to concentrate on the “bread-and-butter” tasks that most early-career artists must master to build a credible portfolio.
+
+- **No live microphone-based transcription in v0.x.**  
+  Although speech-to-text could further reduce friction for some users, the current version does not implement live microphone capture or continuous audio transcription. All prompts are entered as text, and any audio-based features are limited to explicitly uploaded or recorded snippets. This avoids additional privacy and consent complexity and keeps the interaction model simpler for evaluation.
+
+- **No end-user analytics or behavioral tracking.**  
+  Suzanne does not collect telemetry or analytics about how users interact with the add-on. There are no built-in dashboards tracking which prompts are most common, which steps cause difficulty, or how often scripts are executed. While such data could be valuable for iterative design and research, it would also introduce significant privacy and governance concerns. Instead, study data for this thesis comes from **explicitly consented** user studies, where participants are informed about what is recorded and why.
+
+- **Voluntary, anonymized study participation.**  
+  Any formal evaluation of Suzanne is conducted with volunteers who can decline participation or withdraw without penalty. Collected data—such as task completion times, error rates, and survey responses—is anonymized or pseudonymized before analysis. This means the project does not attempt to model long-term user behavior across semesters or track individuals over time; its conclusions are limited to the specific cohorts and conditions studied.
+
+- **Single primary documentation source.**  
+  For grounding, Suzanne relies primarily on the Blender Manual and does not, in this version, integrate other textual sources such as third-party books, course notes, or forum archives [@blender-manual]. This delimitation keeps the retrieval pipeline manageable and the terminology consistent, but it also means that insights from community best practices (for example, from popular tutorial series or studio pipelines) are only reflected indirectly through prompt design, not through direct retrieval.
+
+By making these assumptions, limitations, and delimitations explicit, the thesis clarifies the conditions under which Suzanne is expected to work well and the boundaries beyond which its claims should be treated cautiously. Later chapters return to these points when interpreting evaluation results and outlining directions for future work.
+
 
 ## Ethical considerations (narrative)
 
