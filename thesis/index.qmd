@@ -12,7 +12,7 @@ format:
 natbiboptions: numbers
 # EDIT AT YOUR OWN PERIL #
 
-title: Suzanne
+title: Suzanne:A Blender Assistant
 
 firstreader: Janyl Jumadinova
 secondreader: Douglas Luman
