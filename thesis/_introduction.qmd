@@ -194,6 +194,6 @@ The remainder of this thesis proceeds as follows:
 
 - **Related Work** reviews Blender learning challenges, prior add-ons, AI tutoring systems, RAG-based grounding, and safe model usage.  
 - **Methods** details the N-panel UI, retrieval pipeline, grounding strategy, and safe code execution model.  
-- **Evaluation** presents the study design, tasks, metrics, and analysis.  
+- **Evaluation** presents the study design, tasks, metrics, and analysis. 
 - **Discussion** interprets results and limitations.  
 - **Future Work** explores multilingual support, richer scene graph awareness, and expanded tool-calling capabilities.
