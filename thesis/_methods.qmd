@@ -79,7 +79,7 @@ Suzanne is implemented as a Blender-resident, event-driven assistant with three 
 
 The architecture is intentionally simple because reliability and transparency were prioritized over autonomous behavior. Instead of hidden background orchestration, each major transition is user-triggered and surfaced in the UI.
 
-![Suzanne in Blender's N-panel, where prompts, microphone interaction, and generated procedural responses are shown in the same workspace as the active scene.](images/suzanne_n_panel.png){fig-cap="Figure 3. In-viewport deployment of Suzanne in the right-hand N-panel. The design goal is to keep instruction and execution spatially coupled. Screenshot by the author." width=100%}
+![Suzanne in Blender's N-panel, where prompts, microphone interaction, and generated procedural responses are shown in the same workspace as the active scene.](images/new_suzanne_n_panel.png){fig-cap="Figure 3. In-viewport deployment of Suzanne in the right-hand N-panel. The design goal is to keep instruction and execution spatially coupled. Screenshot by the author." width=100%}
 
 In the implemented pipeline, the assistant does not introspect the full scene graph automatically. Scene awareness is inferred primarily from user prompts and interaction context, which keeps integration lightweight but constrains contextual precision for unusual scenes.
 
