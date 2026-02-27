@@ -1,9 +1,10 @@
 ---
 title: "Why I Built Suzanne for Blender Beginners"
 date: "2025-08-29"
+image: why-i-built-suzanne.png
 ---
 
-![Image post thumbnail](thumbnail.jpg)
+![Suzanne add-on screenshot](why-i-built-suzanne.png)
 
 I created Suzanne to solve a problem I kept seeing in Blender: the learning curve can feel steep, especially for beginners. New users often have to bounce between videos, forums, docs, and random posts just to figure out one workflow. I wanted to make that process easier by giving beginners one place inside Blender where they can ask questions and get help right away, without breaking focus. The goal was not just to answer questions, but to reduce the frustration that comes from searching in too many places for small but important steps.
 
