@@ -12,18 +12,18 @@ format:
 natbiboptions: numbers
 # EDIT AT YOUR OWN PERIL #
 
-title: Senior Thesis Title
+title: Suzanne
 
-firstreader: First Reader
-secondreader: Second Reader
+firstreader: Janyl Jumadinova
+secondreader: Douglas Luman
 
 bibliography: references.bib
 
 author:
-  - name: A. Student
+  - name: Keven Michel Duverglas
     affiliation:
       name: Allegheny College
-      address: 520 N. Main St., Box Q
+      address: 520 N. Main St., Box 337
       city: Meadville
       state: Pennsylvania
       country: USA

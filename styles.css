@@ -1,1 +1,152 @@
-/* css styles */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&family=IBM+Plex+Serif:wght@500;600&display=swap");
+
+:root {
+  --ink-950: #060606;
+  --ink-900: #111111;
+  --ink-700: #2b2b2b;
+  --ink-500: #5e5e5e;
+  --paper-100: #f3f3f3;
+  --paper-50: #fafafa;
+  --paper-0: #ffffff;
+  --line: #d5d5d5;
+  --line-strong: #1e1e1e;
+  --shadow-soft: 0 14px 32px -24px rgba(0, 0, 0, 0.55);
+  --card-radius: 14px;
+}
+
+body {
+  font-family: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", sans-serif;
+  background: radial-gradient(circle at top right, #ffffff 0%, var(--paper-100) 58%);
+  color: var(--ink-900);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.navbar-brand {
+  font-family: "IBM Plex Serif", Georgia, serif;
+  letter-spacing: 0.01em;
+}
+
+a {
+  color: var(--ink-950);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.16em;
+}
+
+a:hover {
+  color: #000000;
+}
+
+/* Top navigation */
+#quarto-header .navbar {
+  background: var(--ink-950) !important;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+#quarto-header .navbar .navbar-brand,
+#quarto-header .navbar .nav-link,
+#quarto-header .navbar .menu-text,
+#quarto-header .navbar .bi {
+  color: var(--paper-0) !important;
+}
+
+#quarto-header .navbar .nav-link:hover,
+#quarto-header .navbar .menu-text:hover {
+  color: #d9d9d9 !important;
+}
+
+/* Page hero/banner */
+#title-block-header.quarto-title-block.default .quarto-title-banner,
+.quarto-title-banner {
+  background: linear-gradient(135deg, var(--ink-950), #202020) !important;
+  color: var(--paper-0) !important;
+}
+
+#title-block-header .title {
+  font-weight: 600;
+}
+
+#title-block-header .quarto-title-meta-heading {
+  color: #c9c9c9;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Section headers */
+h2 {
+  margin-top: 2rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid var(--line);
+}
+
+/* Listing cards */
+.card,
+.quarto-grid-item.card,
+.quarto-grid-item {
+  background: var(--paper-0);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.2s ease;
+}
+
+.card:hover,
+.quarto-grid-item.card:hover,
+.quarto-grid-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 38px -26px rgba(0, 0, 0, 0.75);
+}
+
+.card .card-title,
+.quarto-grid-item .card-title {
+  color: var(--ink-950);
+  font-weight: 700;
+}
+
+.card .card-text,
+.quarto-grid-item .card-text {
+  color: var(--ink-700);
+}
+
+/* Monochrome image treatment */
+.card img,
+.quarto-grid-item img,
+.about-image,
+img.thumbnail-image {
+  filter: grayscale(100%) contrast(1.08);
+}
+
+/* Category chips / metadata pills */
+.quarto-category {
+  background: #fff !important;
+  color: #111 !important;
+  border: 1px solid #111 !important;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* About page image */
+.about-entity .about-image {
+  border-radius: 12px;
+  border: 2px solid #101010;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Mobile polish */
+@media (max-width: 768px) {
+  #title-block-header .title {
+    font-size: 1.9rem;
+  }
+
+  .card,
+  .quarto-grid-item.card,
+  .quarto-grid-item {
+    border-radius: 10px;
+  }
+}

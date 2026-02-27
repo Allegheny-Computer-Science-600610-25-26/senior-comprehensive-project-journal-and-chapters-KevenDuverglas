@@ -1,18 +1,313 @@
-# Method of approach
+# Methods
 
-This chapter answers the "how" question - how did you complete your project,
-including the overall design of your study, details of the algorithms and tools you
-have used, etc.  Use technical diagrams, equations, algorithms, and paragraphs of text
-to describe the research that you have completed. Be sure to number all figures and
-tables and to explicitly refer to them in your text.
+## Chapter purpose and methodological stance
 
-This should contain:
+This chapter explains how Suzanne was designed, implemented, and prepared for evaluation as an in-viewport Blender assistant. The Introduction established the core problem as micro-execution friction (mode, operator, panel path, and action order), while Related Work positioned Suzanne against two common alternatives: external learning resources and automation-first AI add-ons [@blender-manual; @soni2023blenderreview; @blendergpt; @blender-mcp]. Methods therefore focuses on *how* the system operationalizes those insights in software, interface behavior, and safety controls.
 
-* lists
-* with points
-* and more points
-  * possibly subpoints
+The project follows a design-and-build methodology common in applied HCI and educational tooling:
 
-For those projects whose implications address social or moral issues (i.e. ethical
-standards, causes, effects), you will want to use this section to describe how you
-actively mitigated or considered these issues.
+1. Define requirements from literature and practice (Blender learning pain points, in-context tutoring needs, and safety constraints).
+2. Build an executable prototype inside Blender's N-panel.
+3. Iterate on reliability and usability through repeated local testing in authentic modeling workflows.
+4. Prepare measurable outputs for a later experimental chapter (task time, completion quality, and perceived usefulness).
+
+Rather than treating model responses as opaque outputs, the implementation treats each interaction as a reproducible pipeline: user input -> validated request -> model response -> formatted procedural output in the viewport. This pipeline orientation is central to the methodological goal of reducing context switching and improving repeatable task execution.
+
+## Development process
+
+### Phase 1: Requirement extraction
+
+Requirements were extracted from three sources: (a) Blender documentation and interface behavior [@blender-manual], (b) prior studies on beginner friction in Blender [@soni2023blenderreview], and (c) AI-learning-tool findings emphasizing in-context and actionable guidance [@luo2025ailearningtools].
+
+The resulting requirement set emphasized:
+
+- Locality: assistance must appear in the active workspace, not in a separate website.
+- Procedural clarity: responses should be short, ordered, and immediately actionable.
+- Safety: no silent scene modifications and no hidden execution of generated code.
+- Practical deployment: installation and operation should fit student hardware and software constraints.
+
+### Phase 2: Prototype architecture and implementation
+
+The first implementation target was a Blender add-on loaded through the standard add-on registration system (`register()` / `unregister()`), with persistent state stored in `Scene` properties and user-level configuration stored in add-on preferences. This choice aligns with Blender's architecture and keeps the workflow entirely in-app [@blender-manual].
+
+Core interaction paths were implemented as operators:
+
+- Text path: submit prompt -> receive response.
+- Voice path: start/stop microphone capture -> transcribe -> submit transcript -> receive response.
+- Utility path: API-key validation and model/device configuration.
+
+### Phase 3: reliability hardening
+
+After the initial feature set worked end-to-end, iteration prioritized failure behavior rather than feature expansion. The main hardening tasks were:
+
+- Clear status signaling (`Idle`, `Recording`, `Sending`, `Error`).
+- Explicit handling for missing keys, missing devices, missing files, and HTTP failures.
+- Local file-path fallback logic when add-on directories are not writable.
+- UI formatting logic for long responses so multi-step instructions remain readable in the panel.
+
+These hardening steps were chosen because the dominant user risk in educational contexts is not only wrong answers, but interrupted or confusing workflows that break learner momentum.
+
+### Phase 4: evaluation readiness
+
+The final development phase prepared the system for controlled comparison in later chapters by stabilizing the feature surface and defining what is considered in-scope behavior for experiments. At this stage, Suzanne is treated as a mixed-initiative assistant: it recommends, the user decides, and all scene edits remain user-mediated.
+
+## System requirements and traceability
+
+To keep claims testable, each major thesis goal was mapped to an implementation responsibility and observable system behavior.
+
+Table: Requirement-to-implementation traceability for Suzanne
+
+| Requirement | Design decision | Observable behavior |
+|:--|:--|:--|
+| In-viewport assistance | N-panel integration in `VIEW_3D` | User never leaves Blender to ask for help |
+| Procedural responses | Prompt shaping + UI formatting for numbered steps | Output appears as short action sequence |
+| Input flexibility | Text prompt plus microphone-driven flow | Both typed and spoken intents are supported |
+| API transparency | Explicit key entry in preferences and key-test operator | User can verify connectivity before tasks |
+| Fault tolerance | Guard checks and HTTP/IO error handling | Failures are visible and recoverable |
+| Safety-first behavior | No automatic scene mutation from generated text | User remains the final actor |
+| Responsible deployment | Local storage of settings/recordings and no telemetry path | Lower privacy exposure for student use |
+
+This traceability table shaped coding priorities and chapter-level evaluation planning.
+
+## System architecture
+
+Suzanne is implemented as a Blender-resident, event-driven assistant with three layers:
+
+1. Interface layer: N-panel controls, status display, and response rendering.
+2. Orchestration layer: operators that manage validation, request sequencing, and state transitions.
+3. Service layer: network calls for transcription and response generation, plus local audio capture utilities.
+
+The architecture is intentionally simple because reliability and transparency were prioritized over autonomous behavior. Instead of hidden background orchestration, each major transition is user-triggered and surfaced in the UI.
+
+![Suzanne in Blender's N-panel, where prompts, microphone interaction, and generated procedural responses are shown in the same workspace as the active scene.](images/new_suzanne_n_panel.png){fig-cap="Figure 3. In-viewport deployment of Suzanne in the right-hand N-panel. The design goal is to keep instruction and execution spatially coupled. Screenshot by the author." width=100%}
+
+In the implemented pipeline, the assistant does not introspect the full scene graph automatically. Scene awareness is inferred primarily from user prompts and interaction context, which keeps integration lightweight but constrains contextual precision for unusual scenes.
+
+## Blender integration details
+
+### Registration and state model
+
+Suzanne follows Blender add-on conventions for class registration and property initialization [@blender-manual]. Runtime interaction data is maintained in `Scene` properties, including:
+
+- Current status string.
+- Last transcript text.
+- Last model response.
+- Current message prompt.
+- Last recorded audio file path.
+
+Configuration values (API key, model selections, UI category, device preferences) are stored in add-on preferences. This separation was chosen so task state and configuration state remain distinct and easier to reason about during testing.
+
+### Panel design and interaction constraints
+
+The panel was structured around a minimal interaction loop:
+
+1. Enter (or dictate) intent.
+2. Send request.
+3. Read step-oriented response.
+4. Apply steps manually in the scene.
+
+A single microphone button toggles recording on/off to reduce control-surface complexity for beginners. The status line updates on each transition, functioning as lightweight feedback for asynchronous operations (recording, network request, response rendering).
+
+### Cross-platform audio capture strategy
+
+Because Blender is cross-platform and student devices vary, audio capture was implemented with OS-specific command paths:
+
+- Linux: `ffmpeg` with ALSA input.
+- Windows: `ffmpeg` with DirectShow input.
+- macOS: bundled `atunc` utility for capture.
+
+Recorded files are normalized to mono 16 kHz WAV for consistent transcription behavior. If the add-on directory cannot store recordings, the system falls back to a temporary directory. This avoids hard failures in locked-down lab environments.
+
+## End-to-end interaction workflows
+
+### Text workflow
+
+The text path was designed for direct, low-latency interaction from the viewport.
+
+```text
+Algorithm 1: Text request handling
+Input: user_prompt
+Output: formatted procedural response in N-panel
+
+1: if user_prompt is empty then
+2:     show validation error in panel
+3:     return
+4: end if
+5: read API key from add-on preferences
+6: if API key missing then
+7:     show key error and return
+8: end if
+9: optionally prepend Blender-only constraint
+10: send request to response model endpoint
+11: parse output_text (or structured fallback content)
+12: store response in scene state
+13: render wrapped lines in response box
+```
+
+This workflow is intentionally explicit and synchronous from the user's perspective. There are no hidden retries or silent fallbacks that could obscure what happened during a request.
+
+### Voice workflow
+
+The voice path extends the text workflow by inserting capture and transcription stages.
+
+```text
+Algorithm 2: Voice request handling
+Input: microphone toggle events
+Output: transcript + procedural response in N-panel
+
+1: on first press, start recording process and set status=Recording
+2: on second press, stop process and wait for output file
+3: if file missing then show error and abort
+4: send audio file to transcription endpoint
+5: if transcript empty then show error and abort
+6: optionally prepend Blender-only constraint
+7: send transcript to response endpoint
+8: store transcript, file path, and response in scene state
+9: render transcript and response in panel
+```
+
+This two-press model was selected over push-to-talk hold behavior because it lowers motor-demand complexity for novices and allows longer utterances without continuous key holding.
+
+## Network and model interaction layer
+
+### API endpoints and payload flow
+
+The implementation uses HTTPS requests to model APIs for two tasks:
+
+- Audio transcription (`/v1/audio/transcriptions`) with multipart file payloads.
+- Text response generation (`/v1/responses`) with JSON payloads.
+
+A lightweight key-test operation (`/v1/models`) is provided in preferences to reduce setup uncertainty before first use. This small affordance significantly reduced setup friction during internal testing because users can distinguish key issues from prompt-quality issues.
+
+### Error handling and response robustness
+
+The system treats network interaction as failure-prone and therefore includes guarded parsing and user-facing error messages for:
+
+- Missing or malformed API keys.
+- HTTP transport failures.
+- Non-JSON or unexpected response structures.
+- Empty transcripts or empty model outputs.
+
+When primary response fields are absent, the parser attempts structured fallback extraction from nested output content. This improves resilience across model-response format differences while keeping the UI contract stable.
+
+## Grounding and response-formation strategy
+
+A major methodological goal is grounding outputs in authoritative Blender language so instructions remain reproducible and verifiable [@blender-manual; @gao2023retrieval]. The full grounding strategy is defined in three layers:
+
+1. **Domain constraint layer.** Optional Blender-only prefixing prevents off-domain drift and keeps responses task-focused.
+2. **Terminology alignment layer.** Prompting style favors explicit mode names, operator names, and panel paths.
+3. **Retrieval layer.** A retrieval-augmented extension is specified to inject relevant Manual passages before generation.
+
+The current evaluated build implements layers (1) and (2) directly and is architected to accept layer (3) as a modular extension. This allows transparent reporting of what is already operational versus what is specified for the full thesis target.
+
+For the retrieval extension, passage ranking follows standard vector-similarity scoring [@gao2023retrieval]:
+
+$$
+\mathrm{score}(q, d_i) = \cos(\mathbf{e}_q, \mathbf{e}_{d_i}) =
+\frac{\mathbf{e}_q \cdot \mathbf{e}_{d_i}}{\|\mathbf{e}_q\|\,\|\mathbf{e}_{d_i}\|}
+$$
+
+where $\mathbf{e}_q$ is the query embedding and $\mathbf{e}_{d_i}$ is the embedding of document chunk $d_i$. Top-ranked chunks are then inserted into the generation context to reduce terminology drift and menu-path hallucination.
+
+### Response schema for procedural clarity
+
+Regardless of input modality, the response format is designed to preserve instructional structure:
+
+- Short, ordered steps.
+- Explicit prerequisite states (mode, selection assumptions).
+- Concrete operator/menu naming where possible.
+- Troubleshooting branches when likely failure points are detected.
+
+This schema reflects findings from AI-learning literature that actionable, context-proximate feedback is more useful than generic prose [@luo2025ailearningtools].
+
+## Safe code-assistance model
+
+Related work showed that automation-first Blender copilots often execute generated code quickly, which improves speed but can increase risk [@blendergpt; @blender-mcp; @daspaper2025llmsecurity]. Suzanne's method is deliberately conservative:
+
+- Primary output is human-readable procedure, not autonomous execution.
+- Any code-like content is treated as optional scaffolding for user inspection.
+- Scene changes remain user-initiated in Blender.
+
+For the planned guarded execution extension, the policy model includes:
+
+1. Explicit confirmation before any run action.
+2. Restricted operation classes (object creation/transforms/lights/cameras/shader nodes).
+3. Blocked operations for high-risk file/network/system effects.
+4. Immediate rollback guidance using Blender's undo stack.
+
+By separating *advice* from *execution authority*, the method keeps user agency central and aligns with security guidance on minimizing model-side permissions [@daspaper2025llmsecurity].
+
+## Responsible-computing controls in implementation
+
+Ethical concerns were translated into concrete implementation controls rather than left as abstract policy.
+
+### Privacy and data minimization
+
+- API keys are user-supplied in local add-on preferences.
+- No separate telemetry service is embedded in the add-on.
+- Data sent externally is limited to explicit user inputs (typed text or recorded audio).
+
+This local-first approach reduces unnecessary data propagation while acknowledging that third-party API processing remains part of the architecture [@daspaper2025llmsecurity].
+
+### Transparency and cost visibility
+
+The system surfaces failures directly (e.g., key, quota, network, decode) instead of silently degrading output quality. Making failure modes visible helps users manage API budgets and prevents misattributing infrastructure issues to user competence.
+
+### Inclusivity by instruction style
+
+UI output is cleaned and line-wrapped for readability, and markdown-heavy formatting is normalized before display. The intent is to improve clarity for novices and non-native readers by emphasizing operational language over stylistic flair.
+
+## Implementation environment and reproducibility
+
+### Software stack
+
+The prototype runs as a Blender add-on for Blender 3.0+ [@blender-manual], using Python within Blender's runtime and standard libraries for process and HTTP orchestration. External tooling dependencies are intentionally minimal:
+
+- `ffmpeg` (Linux/Windows) for microphone capture.
+- bundled `atunc` utility (macOS) for microphone capture.
+- Network access to model APIs for transcription and response generation.
+
+### Reproducibility protocol
+
+To support repeatable demonstrations and evaluation setup, the following run protocol was used:
+
+1. Install/enable add-on in Blender.
+2. Configure API key and model settings in preferences.
+3. Validate key with the built-in key-test operator.
+4. Confirm audio-device selection (if voice path is used).
+5. Run fixed benchmark prompts/tasks and record completion observations.
+
+Because Blender versions and OS audio stacks vary, environment metadata (OS, Blender version, selected models, and device identifier) is logged as part of experiment setup documentation.
+
+### Versioned capability statement
+
+To avoid overclaiming, methods reporting distinguishes current implementation from scoped extension work.
+
+Table: Implemented capabilities versus scoped extensions
+
+| Capability area | Implemented in current build | Scoped extension |
+|:--|:--|:--|
+| In-viewport text assistant | Yes | N/A |
+| Voice capture and transcription | Yes | N/A |
+| Blender-only domain gating | Yes (toggle) | Richer intent classification |
+| Retrieval grounding from Manual | Partial (prompt-level alignment) | Full chunk retrieval + citation injection |
+| Procedural step formatting | Yes | Adaptive difficulty/fading |
+| Code execution inside add-on | No autonomous execution | Guarded, opt-in constrained runner |
+| User safety controls | Yes (validation/status/errors) | Formal policy engine and audit trails |
+
+This separation supports methodological integrity: the chapter captures both delivered engineering work and the explicit next-step architecture required to fully realize the thesis design goals.
+
+## Methods-level limitations
+
+Several methodological constraints influence interpretation of later results:
+
+- Scene-context inference is mostly prompt-driven rather than full scene introspection.
+- Grounding is currently strongest at terminology/prompt levels, with full RAG integration staged as extension work.
+- API-dependent behavior introduces latency and availability variability outside Blender control.
+- Microphone quality and device configuration can affect transcription quality and therefore downstream instruction quality.
+
+These limits are not hidden defects; they are declared boundaries that shape valid claims in evaluation and discussion chapters.
+
+## Transition to evaluation
+
+This Methods chapter established the system design and implementation pipeline used to operationalize Suzanne as an in-viewport instructional assistant. The next chapter evaluates this method against baseline search-driven workflows using task completion metrics, quality-oriented outcome criteria, and user-perception measures aligned with portfolio-relevant Blender tasks.
