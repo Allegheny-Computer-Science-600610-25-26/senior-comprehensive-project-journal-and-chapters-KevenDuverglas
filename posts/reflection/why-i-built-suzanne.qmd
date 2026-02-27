@@ -1,0 +1,10 @@
+---
+title: "Why I Built Suzanne for Blender Beginners"
+date: "2025-08-29"
+---
+
+![Image post thumbnail](thumbnail.jpg)
+
+I created Suzanne to solve a problem I kept seeing in Blender: the learning curve can feel steep, especially for beginners. New users often have to bounce between videos, forums, docs, and random posts just to figure out one workflow. I wanted to make that process easier by giving beginners one place inside Blender where they can ask questions and get help right away, without breaking focus. The goal was not just to answer questions, but to reduce the frustration that comes from searching in too many places for small but important steps.
+
+The first version was very limited and rough. I had to record audio manually in Audacity, then import it into Blender, and the whole flow was glitchy and slow. Even with those issues, building it was exciting because each fix made the add-on feel more useful and more beginner-friendly. Seeing it move from a clunky prototype to something that actually supports learning has been one of the most rewarding parts of this project.
