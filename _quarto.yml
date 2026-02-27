@@ -7,10 +7,10 @@ project:
 execute:
   freeze: auto
 author:
-  - name: A. Student
+  - name: Keven Michel Duverglas
     email: astudent@allegheny.edu
 website:
-  title: "ReadyResearchers Template"
+  title: "Keven Duverglas | Suzanne Project Journal"
   navbar:
     right:
       - text: "Senior Thesis"

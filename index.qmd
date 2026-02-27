@@ -1,5 +1,5 @@
 ---
-title: "ReadyResearchers Template"
+title: "Suzanne Voice Assistant: Senior Project Journal"
 listing:
   - id: posts
     contents:
