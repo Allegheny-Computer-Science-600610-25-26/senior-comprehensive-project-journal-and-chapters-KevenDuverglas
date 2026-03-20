@@ -1,10 +1,102 @@
-# Related work
+# Related Work
 
-This chapter includes a broad and detailed review of relevant existing work.
-The literature review should provide background and context for the thesis work.
-The subsections may be organized in whatever manner seems best suited to the material--
-chronological, or by topic, or according to some other criteria
-(e.g., primary versus secondary resources).
+## Overview and Scope  
 
-If ethical issues are central to this work, you should also address historical and
-contemporary issues or efforts made to address them.
+This chapter reviews prior work in six areas that together frame Suzanne’s design and research questions: (i) how people currently learn Blender through manuals, books, and community pedagogy; (ii) in-app guidance and “copilot”-style assistance in creative and coding tools; (iii) AI teaching assistants and step-oriented learning tools; (iv) retrieval-augmented generation (RAG) grounded in trusted documentation; (v) code generation and safety in end-user environments; and (vi) portfolio-based assessment and learning outcomes.  
+
+Across these strands, a common pattern appears: powerful tools—whether 3D suites, IDEs, or AI models—offer enormous expressive range but place a high burden on **micro-execution**: knowing which operation to call, in which context, and in what order. Existing resources for Blender tend to live *outside* the viewport (books, PDFs, long videos, forum threads) or, in the case of recent AI assistants, focus on generating code rather than teaching reproducible steps. Suzanne positions itself at the intersection of these literatures as an **in-viewport, step-by-step tutor** that (a) grounds its responses in the official Blender Manual [@blender-manual], (b) returns numbered, operator-named steps inside the N-panel, and (c) optionally surfaces small Python snippets behind explicit guardrails.
+
+## Learning Blender: Manuals, Tutorials, and Community Help  
+
+Blender’s official Manual is the primary authoritative source for terminology, operator behavior, and UI labels [@blender-manual]. It defines core concepts such as modes, the modifier stack, and data-block organization, and it documents the precise menu paths and shortcuts associated with each operator. Because of its breadth and authoritative status, this work treats the Manual as the ground truth for operator names, panel labels, and expected behavior: Suzanne’s retrieval pipeline targets these pages, and its UI mirrors the Manual’s language where possible.  
+
+Research on Blender’s interface and evolution reinforces how challenging the software can be for new users. Soni et al. review multiple versions of Blender and highlight the complexity added by its multi-editor layout, dense menus, and mode-dependent tools [@soni2023blenderreview]. They note that changes across versions can also create friction when users follow older tutorials, contributing to confusion about where options are located or why certain operators behave differently. These findings align with anecdotal reports from the Blender community that beginners frequently struggle with mode switching, modifier order, and shading artifacts.  
+
+Beyond official documentation, Blender learners rely heavily on **project-based resources** such as Arijan Belec’s *Blender 3D Incredible Models*, which walks readers through hard-surface modeling, procedural texturing, and rendering workflows [@belec2022blender]. Books like this provide rich, end-to-end examples but still require learners to juggle a separate text or PDF alongside the 3D viewport, translating prose descriptions and screenshots into local actions.  
+
+Video tutorials represent another major learning ecosystem. The Blender Guru “donut” series, for instance, has become a de facto introduction to modeling, shading, and rendering for many beginners [@blenderguru-donut2026]. Long-form videos offer detailed demonstrations and a sense of narrative progression, but they also introduce substantial **context-switching costs**: learners pause, rewind, or scrub to find the relevant moment; they struggle to map instructions onto different Blender versions; and they often have to adapt the tutorial to their own scene.  
+
+Taken together, prior work and practitioner resources show that Blender learners have access to deep, high-quality material, but it is fragmented across manuals, books, and videos. Very little of this guidance appears as **short, verifiable steps inside the viewport** itself, which is the gap Suzanne aims to explore.
+
+## In-App Guidance and “Copilots” in Creative and Coding Tools  
+
+In the broader HCI and software-engineering literature, there is strong interest in **in-context assistance** that appears directly within the tools people use. Chilana et al. study MarmalAid, a web-based 3D modeling environment that embeds real-time expert chat within the 3D scene [@8506568]. Their observational work with novice–expert pairs shows that in-context chat leads novices to ask more task-focused questions and reduces the friction of switching to external help channels. This supports the idea that assistance is more effective when it is tightly coupled to the workspace rather than offloaded to separate windows or devices.  
+
+Although most large-scale empirical work on copilot-style assistance has focused on **coding** rather than 3D art, the underlying themes are similar. Inline suggestions in IDEs reduce the need to consult external documentation and can speed up repetitive tasks. Luo et al.’s systematic review of AI-based learning tools in higher education notes that tools integrated into students’ existing workflows—such as writing or coding environments—tend to show stronger effects on engagement and perceived usefulness than standalone web portals [@luo2025ailearningtools].  
+
+For Blender specifically, community tools such as custom pie menus and quick-access panels provide a form of “micro-guidance” by surfacing commonly used operators, but they rarely explain *why* a given operator is appropriate or what prerequisites (mode, selection, object type) must hold. Suzanne builds on the general insight from MarmalAid and AI-enhanced IDEs: assistance should appear **where the work happens**. It extends this idea by focusing not on chat alone, but on **small, numbered recipes** that explicitly list prerequisites and operator names.
+
+## Blender Add-ons and Prior Attempts at Guidance  
+
+Recent years have seen the emergence of Blender add-ons that integrate large language models directly into the application. BlenderGPT is an early example: a plug-in that exposes a GPT-4/3.5-backed panel where users can type natural-language commands like “create a cube at the origin,” which the system then translates into Python scripts executed inside Blender [@blendergpt]. BlenderGPT demonstrates that LLMs can control Blender’s Python API and support natural-language scene manipulation, but it primarily targets **code generation and automation**, not pedagogy. Generated scripts run immediately, and while users can inspect them via the system console, the main interaction is “describe the goal, then let the model act.”  
+
+![Panels for existing AI-powered Blender add-ons, such as BlenderGPT and BlenderMCP, shown inside Blender’s sidebar. These tools accept natural-language prompts and execute generated Python directly, emphasizing automation rather than step-by-step instruction.](images/ai_addons_sidebar.png){fig-cap="Figure X. Existing AI add-ons like BlenderGPT and BlenderMCP integrate LLMs into Blender but focus on code execution, not instructional micro-steps. Screenshot by the author, adapted from a test scene." width=100%}
+
+BlenderMCP extends this pattern by connecting Blender to Claude through the Model Context Protocol [@blender-mcp]. It exposes tools for scene inspection, object manipulation, material adjustments, asset retrieval from Poly Haven and Sketchfab, and arbitrary Python code execution. BlenderMCP explicitly positions itself as an AI-assisted 3D modeling companion, allowing high-level prompts like “create a low poly dungeon scene” or “make this car red and metallic.” Similar to BlenderGPT, however, its focus is on **delegating actions** to the model rather than teaching users how to perform those actions themselves.  
+
+These systems show that:  
+1. LLMs can successfully interact with Blender’s Python API; and  
+2. there is community demand for conversational, in-Blender assistants.  
+
+At the same time, they surface design and safety challenges discussed later in this chapter. For the purposes of this thesis, they serve as **baseline examples** of AI-powered Blender add-ons that emphasize automation. Suzanne diverges by centering **instruction**: instead of simply executing a scene change, it returns a small set of numbered steps (e.g., required mode, menu path, parameter values) and only optionally offers Python snippets behind explicit confirmations. In that sense, Suzanne is closer to MarmalAid’s in-context help [@8506568] than to an autonomous copilot.
+
+## AI for Teaching and Tutoring  
+
+Beyond 3D modeling, there is a growing body of work on AI-based learning tools in higher education. Luo et al. synthesize studies of AI-enabled systems—ranging from chatbots and recommendation engines to adaptive tutors—and report generally positive effects on engagement, perceived usefulness, and, in some cases, learning outcomes [@luo2025ailearningtools]. They highlight that tools are most effective when they provide **specific, actionable feedback** aligned with course goals, and when they are integrated into students’ regular workflows rather than offered as optional extras.  
+
+The review also notes risks that are directly relevant to Suzanne: over-reliance on AI advice, inconsistent accuracy, and limited transparency about how suggestions are produced [@luo2025ailearningtools]. These concerns echo broader security and privacy issues raised by Das et al., who catalog a range of vulnerabilities in large language models, including data leakage, jailbreaking, and misuse across domains such as education and healthcare [@daspaper2025llmsecurity].  
+
+From the perspective of procedural skill learning, prior work on intelligent tutoring systems and worked examples (summarized in reviews like Luo et al.’s) suggests that **step-by-step guidance with gradual fading** can help novices internalize complex procedures rather than simply copying answers. While Suzanne does not implement a full student model or adaptive fading, its design is inspired by this literature: it presents short, numbered steps with explicit prerequisites, and encourages learners to repeat and modify these sequences in their own scenes.
+
+## Retrieval over Trusted Docs: Grounding on the Blender Manual  
+
+Large language models are known to hallucinate or deviate from domain terminology when prompted without external grounding. Retrieval-augmented generation (RAG) is a widely discussed pattern for mitigating these issues by retrieving relevant documents before or during generation [@gao2023retrieval]. Gao et al. survey RAG architectures and show that conditioning models on retrieved passages can improve factual accuracy and alignment with specialized vocabularies, especially in technical domains [@gao2023retrieval].  
+
+Suzanne adopts this pattern by retrieving passages from the Blender Manual [@blender-manual] for each user query and using them as context when generating instructions. In practice, this means that operator names, panel paths, and option labels are drawn from the same text that users would encounter if they opened the Manual directly. The system also surfaces links or section references back to the Manual, encouraging users to verify instructions and explore deeper explanations.  
+
+Grounding on the Manual further supports *version transparency*: when Blender’s UI or operator behavior changes, the documentation is typically updated first. By aligning Suzanne’s outputs with the Manual rather than with arbitrary web pages or forum posts, the system aims to remain closer to Blender’s official semantics, while still benefiting from the flexibility of language models.
+
+## Code Generation in End-User Tools: Safety and UX  
+
+As BlenderGPT and BlenderMCP illustrate, LLM-driven code generation in end-user tools offers powerful benefits but also introduces significant risks [@blendergpt; @blender-mcp]. On the positive side, generated Python can automate repetitive scene setup, create lighting and camera rigs, or scaffold shader node networks that would be tedious to construct manually. In scientific workflows, scripted pipelines built on Blender’s Python architecture have been used to generate synthetic imagery for digital image correlation experiments, demonstrating that Blender can support reproducible, research-grade pipelines [@rohe2022syntheticdic].  
+
+However, arbitrary code execution inside a rich 3D environment is inherently risky. A single destructive operator (e.g., applying modifiers, deleting objects, or clearing transforms) can irreversibly alter a scene if the user does not immediately notice. BlenderMCP’s documentation explicitly warns users about the dangers of its `execute_blender_code` tool and recommends saving work before issuing commands [@blender-mcp]. Das et al.’s survey of LLM security concerns generalizes this problem, noting that models can be prompted—intentionally or accidentally—to produce harmful code, access sensitive data, or trigger unintended side effects [@daspaper2025llmsecurity].  
+
+From a UX standpoint, these findings suggest several design norms for mixed-initiative code generation:  
+* **Transparency** – users should see the generated script before it runs.  
+* **Explicit confirmation** – execution should be opt-in, not automatic.  
+* **Scoped capabilities** – tools should avoid file I/O, networking, and other high-risk operations in default modes.  
+* **Reversibility** – environments should support undo or rollback.  
+
+Suzanne adopts these norms by showing the generated Python snippet in a dedicated area, requiring explicit confirmation before execution, restricting code generation to a safe subset of Blender’s API (object creation, transforms, lights, cameras, shader nodes), and relying on Blender’s undo stack as a primary recovery mechanism. In contrast to BlenderGPT and BlenderMCP, which often treat code as the main output, Suzanne treats code as **optional scaffolding** that complements its primary product: human-readable, reproducible steps.
+
+## Portfolios, Artifacts, and Evaluation in 3D Learning  
+
+Although this thesis focuses on Blender rather than formal writing instruction, ideas from portfolio-based assessment transfer directly to 3D art education. Lam argues that “assessment as learning” reframes portfolios from static evidence of achievement to part of an ongoing cycle where students generate work, receive feedback, and reflect on their progress [@lam2015assessment]. In portfolio-based classrooms, artifacts are valued not only for their final quality but also for the metacognitive skills students develop by revisiting and revising their work.  
+
+In 3D modeling and digital art, instructors and reviewers similarly evaluate students through **bodies of work** rather than isolated assignments. Hard-surface projects like those in Belec’s *Blender 3D Incredible Models* emphasize clean topology, consistent shading, and thoughtful presentation—qualities that are visible across turntables, wireframe renders, and breakdown images [@belec2022blender]. Scientific uses of Blender, such as generating synthetic image-correlation datasets, also rely on reproducible pipelines and documented workflows [@rohe2022syntheticdic].  
+
+Suzanne is designed with these portfolio dynamics in mind. By helping learners execute common modeling, shading, and lighting tasks more reliably, it aims to increase the number of **finished, portfolio-ready artifacts** they can produce within a given time frame. Step-level guidance—explicitly naming modes, operators, and modifier order—supports repeatability: once a learner has successfully completed a workflow with Suzanne, they can apply the same pattern to new projects or adapt it to more complex scenes.
+
+## Ethical and Governance Considerations  
+
+The use of LLMs inside educational and creative tools raises ethical questions around privacy, security, and equity. Das et al. document a wide range of attack vectors and privacy risks for large language models, including data poisoning, prompt injection, and leakage of personally identifiable information [@daspaper2025llmsecurity]. When such models are integrated into classroom or portfolio workflows, these risks intersect with institutional responsibilities to protect student data.  
+
+Luo et al. note that many AI-based learning tools do not clearly communicate what data they collect or how it is used, which can erode trust among students and instructors [@luo2025ailearningtools]. They argue for transparent governance and explicit consent when deploying AI in higher-education settings. For open-source, locally installed tools like Suzanne, this translates into design choices such as keeping API keys on the user’s machine, avoiding server-side logging of prompts, and clearly warning users against sending sensitive content.  
+
+Equity and access are also central. Blender itself is free and open source [@blender-manual], which has made it a critical tool for students and independent artists who cannot afford commercial 3D suites. By building Suzanne as a free add-on that runs inside Blender and by grounding its responses in publicly available documentation, the project seeks to support self-taught learners and students at resource-limited institutions. At the same time, reliance on third-party LLM APIs introduces cost and connectivity constraints; this thesis acknowledges those limitations and points forward to potential offline or on-device models in future work.
+
+## Synthesis: Remaining Gaps  
+
+Existing literature and tools establish several important points. First, Blender’s power and open-source ecosystem make it attractive for education, portfolios, and even scientific workflows, but its interface and mode system pose significant challenges for novices [@blender-manual; @soni2023blenderreview; @belec2022blender; @rohe2022syntheticdic]. Second, in-context help and embedded communication channels—such as MarmalAid’s real-time expert chat—can make it easier for learners to seek and apply guidance without leaving their workspace [@8506568]. Third, AI-based learning tools and LLM-powered assistants show promise for providing personalized feedback and automation, but they raise concerns about accuracy, over-reliance, privacy, and security [@luo2025ailearningtools; @daspaper2025llmsecurity]. Finally, portfolio-based assessment emphasizes cycles of production and reflection, placing value on tools that help students consistently produce and refine artifacts [@lam2015assessment].  
+
+Within this landscape, there is still a clear gap: **no existing system provides an in-viewport, step-by-step tutor for Blender that is explicitly grounded in the official Manual, designed around portfolio-oriented workflows, and equipped with safe, optional code execution.** Current AI add-ons such as BlenderGPT and BlenderMCP prioritize automation and code generation [@blendergpt; @blender-mcp]; community tutorials and books provide rich instruction but remain external to the viewport [@belec2022blender; @blenderguru-donut2026].  
+
+Suzanne is designed to address this gap by:  
+
+1. Delivering short, numbered, operator-named steps inside the N-panel;  
+2. Grounding those steps on retrieved passages from the Blender Manual [@blender-manual; @gao2023retrieval];  
+3. Providing optional Python snippets under explicit guardrails informed by LLM security literature [@daspaper2025llmsecurity]; and  
+4. Targeting modeling, shading, and presentation workflows that contribute directly to students’ and independent artists’ portfolios.  
+
+The next chapter details how these ideas are realized in the system’s architecture, including the N-panel UI, retrieval and grounding pipeline, and safe code-execution model, as well as the evaluation design used to compare Suzanne to baseline search-driven workflows.
