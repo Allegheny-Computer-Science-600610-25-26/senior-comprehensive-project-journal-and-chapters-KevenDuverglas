@@ -28,22 +28,23 @@ The resulting requirement set emphasized:
 
 ### Phase 2: Prototype architecture and implementation
 
-The first implementation target was a Blender add-on loaded through the standard add-on registration system (`register()` / `unregister()`), with persistent state stored in `Scene` properties and user-level configuration stored in add-on preferences. This choice aligns with Blender's architecture and keeps the workflow entirely in-app [@blender-manual].
+The first implementation target was a Blender add-on loaded through the standard add-on registration system (`register()` / `unregister()`), with persistent interaction state stored in `Scene` properties, user-level configuration stored in add-on preferences, and local conversation history persisted to disk with a temporary-directory fallback. This choice aligns with Blender's architecture and keeps the workflow entirely in-app [@blender-manual].
 
 Core interaction paths were implemented as operators:
 
-- Text path: submit prompt -> receive response.
-- Voice path: start/stop microphone capture -> transcribe -> submit transcript -> receive response.
-- Utility path: API-key validation and model/device configuration.
+- Text path: submit prompt -> optionally attach recent conversation turns and Blender Info history -> receive response.
+- Voice path: start/stop microphone capture -> transcribe -> optionally attach recent context -> submit transcript -> receive response.
+- Conversation path: create, select, rename, delete, and preview local conversations.
+- Utility path: API-key validation, model refresh, microphone/transcription diagnostics, and recordings-folder access.
 
 ### Phase 3: reliability hardening
 
 After the initial feature set worked end-to-end, iteration prioritized failure behavior rather than feature expansion. The main hardening tasks were:
 
-- Clear status signaling (`Idle`, `Recording`, `Sending`, `Error`).
-- Explicit handling for missing keys, missing devices, missing files, and HTTP failures.
-- Local file-path fallback logic when add-on directories are not writable.
-- UI formatting logic for long responses so multi-step instructions remain readable in the panel.
+- Clear status signaling (`Ready`, `Recording...`, `Sending...`, `Error`).
+- Explicit handling for missing keys, missing files, empty transcripts, empty outputs, and HTTP failures.
+- Local fallback logic for recordings and conversation storage when add-on directories are not writable.
+- UI formatting logic for long responses, output previews, and empty states so multi-step instructions remain readable in the panel.
 
 These hardening steps were chosen because the dominant user risk in educational contexts is not only wrong answers, but interrupted or confusing workflows that break learner momentum.
 
@@ -62,10 +63,11 @@ Table: Requirement-to-implementation traceability for Suzanne
 | In-viewport assistance | N-panel integration in `VIEW_3D` | User never leaves Blender to ask for help |
 | Procedural responses | Prompt shaping + UI formatting for numbered steps | Output appears as short action sequence |
 | Input flexibility | Text prompt plus microphone-driven flow | Both typed and spoken intents are supported |
+| Context-aware help | Optional conversation memory and Blender Info-history attachment | Responses can incorporate recent workflow context when enabled |
 | API transparency | Explicit key entry in preferences and key-test operator | User can verify connectivity before tasks |
 | Fault tolerance | Guard checks and HTTP/IO error handling | Failures are visible and recoverable |
 | Safety-first behavior | No automatic scene mutation from generated text | User remains the final actor |
-| Responsible deployment | Local storage of settings/recordings and no telemetry path | Lower privacy exposure for student use |
+| Responsible deployment | Local storage of settings, conversations, and recordings with no telemetry path | Lower privacy exposure for student use |
 
 This traceability table shaped coding priorities and chapter-level evaluation planning.
 
@@ -73,15 +75,15 @@ This traceability table shaped coding priorities and chapter-level evaluation pl
 
 Suzanne is implemented as a Blender-resident, event-driven assistant with three layers:
 
-1. Interface layer: N-panel controls, status display, and response rendering.
-2. Orchestration layer: operators that manage validation, request sequencing, and state transitions.
-3. Service layer: network calls for transcription and response generation, plus local audio capture utilities.
+1. Interface layer: collapsible `Status`, `Ask`, `Voice`, `Context`, `Conversation`, and `Latest Output` cards in the N-panel.
+2. Orchestration layer: operators that manage validation, request sequencing, recording toggles, conversation management, and state transitions.
+3. Service layer: network calls for transcription and response generation, local audio capture utilities, and local JSON-backed conversation storage.
 
 The architecture is intentionally simple because reliability and transparency were prioritized over autonomous behavior. Instead of hidden background orchestration, each major transition is user-triggered and surfaced in the UI.
 
-![Suzanne in Blender's N-panel, where prompts, microphone interaction, and generated procedural responses are shown in the same workspace as the active scene.](images/new_suzanne_n_panel.png){fig-cap="Figure 3. In-viewport deployment of Suzanne in the right-hand N-panel. The design goal is to keep instruction and execution spatially coupled. Screenshot by the author." width=100%}
+![Current Suzanne interface in Blender's N-panel, showing the status card, text prompt area, voice control, context settings, conversation controls, and latest-output preview in the same workspace as the active scene.](images/suzanne_n_panel_latest.png){fig-cap="Figure 3. Current in-viewport deployment of Suzanne in the right-hand N-panel. The interface keeps prompt entry, voice capture, context controls, conversation memory, and output review spatially coupled to Blender's workspace. Screenshot by the author." width=100%}
 
-In the implemented pipeline, the assistant does not introspect the full scene graph automatically. Scene awareness is inferred primarily from user prompts and interaction context, which keeps integration lightweight but constrains contextual precision for unusual scenes.
+In the implemented pipeline, the assistant does not introspect the full scene graph automatically. Scene awareness is inferred primarily from user prompts plus optional attached context: recent local conversation turns and the last 100 lines of Blender's Info history. This keeps integration lightweight while still allowing limited context-sensitive assistance, though it constrains precision for unusual scenes or workflows not visible in the recent interaction history.
 
 ## Blender integration details
 
@@ -90,23 +92,28 @@ In the implemented pipeline, the assistant does not introspect the full scene gr
 Suzanne follows Blender add-on conventions for class registration and property initialization [@blender-manual]. Runtime interaction data is maintained in `Scene` properties, including:
 
 - Current status string.
-- Last transcript text.
-- Last model response.
 - Current message prompt.
+- Last transcript text and last model response.
 - Last recorded audio file path.
+- Active conversation selection and conversation-context settings.
+- Info-history attachment toggle and the last captured Info-history block.
+- Latest-output view and transcript/response expansion state.
 
-Configuration values (API key, model selections, UI category, device preferences) are stored in add-on preferences. This separation was chosen so task state and configuration state remain distinct and easier to reason about during testing.
+Configuration values (API key, response/transcription model selections, file prefix, conversation auto-save behavior, and diagnostics feedback) are stored in add-on preferences. This separation was chosen so task state and configuration state remain distinct and easier to reason about during testing.
 
 ### Panel design and interaction constraints
 
-The panel was structured around a minimal interaction loop:
+The panel is now structured around a set of Blender-native collapsible cards: `Status`, `Ask`, `Voice`, `Context`, `Conversation`, and `Latest Output`. This layout keeps the primary interaction loop visible while allowing supporting controls to remain compact until needed.
+
+The interaction loop is:
 
 1. Enter (or dictate) intent.
-2. Send request.
-3. Read step-oriented response.
-4. Apply steps manually in the scene.
+2. Optionally attach recent conversation turns or Blender Info history.
+3. Send request.
+4. Read the latest transcript or step-oriented response.
+5. Apply steps manually in the scene.
 
-A single microphone button toggles recording on/off to reduce control-surface complexity for beginners. The status line updates on each transition, functioning as lightweight feedback for asynchronous operations (recording, network request, response rendering).
+A single microphone button toggles recording on/off to reduce control-surface complexity for beginners. The status card updates on each transition, functioning as lightweight feedback for asynchronous operations (recording, network request, response rendering). Empty states in the `Conversation` and `Latest Output` cards make it clear when no history or response is available yet, and long transcripts or responses can be expanded in place when necessary.
 
 ### Cross-platform audio capture strategy
 
@@ -137,11 +144,12 @@ Output: formatted procedural response in N-panel
 6: if API key missing then
 7:     show key error and return
 8: end if
-9: optionally prepend Blender-only constraint
-10: send request to response model endpoint
-11: parse output_text (or structured fallback content)
-12: store response in scene state
-13: render wrapped lines in response box
+9: collect optional conversation context and Blender Info history if enabled
+10: apply Blender-only prompt prefix and build request payload
+11: send request to response model endpoint
+12: parse output_text (or structured fallback content)
+13: store response in scene state and append local conversation exchange
+14: render wrapped lines in response box
 ```
 
 This workflow is intentionally explicit and synchronous from the user's perspective. There are no hidden retries or silent fallbacks that could obscure what happened during a request.
@@ -160,10 +168,11 @@ Output: transcript + procedural response in N-panel
 3: if file missing then show error and abort
 4: send audio file to transcription endpoint
 5: if transcript empty then show error and abort
-6: optionally prepend Blender-only constraint
-7: send transcript to response endpoint
-8: store transcript, file path, and response in scene state
-9: render transcript and response in panel
+6: collect optional conversation context and Blender Info history if enabled
+7: apply Blender-only prompt prefix
+8: send transcript to response endpoint
+9: store transcript, file path, response, and local conversation exchange
+10: render transcript and response in panel
 ```
 
 This two-press model was selected over push-to-talk hold behavior because it lowers motor-demand complexity for novices and allows longer utterances without continuous key holding.
@@ -194,7 +203,7 @@ When primary response fields are absent, the parser attempts structured fallback
 
 A major methodological goal is grounding outputs in authoritative Blender language so instructions remain reproducible and verifiable [@blender-manual; @gao2023retrieval]. The full grounding strategy is defined in three layers:
 
-1. **Domain constraint layer.** Optional Blender-only prefixing prevents off-domain drift and keeps responses task-focused.
+1. **Domain constraint layer.** An always-applied Blender-only prefix prevents off-domain drift and keeps responses task-focused.
 2. **Terminology alignment layer.** Prompting style favors explicit mode names, operator names, and panel paths.
 3. **Retrieval layer.** A retrieval-augmented extension is specified to inject relevant Manual passages before generation.
 
@@ -245,7 +254,8 @@ Ethical concerns were translated into concrete implementation controls rather th
 
 - API keys are user-supplied in local add-on preferences.
 - No separate telemetry service is embedded in the add-on.
-- Data sent externally is limited to explicit user inputs (typed text or recorded audio).
+- Conversation history and recordings are stored locally on the user's machine.
+- Data sent externally is limited to explicit user inputs plus any context blocks the user chooses to attach (recent conversation turns and/or recent Blender Info history).
 
 This local-first approach reduces unnecessary data propagation while acknowledging that third-party API processing remains part of the architecture [@daspaper2025llmsecurity].
 
@@ -261,7 +271,7 @@ UI output is cleaned and line-wrapped for readability, and markdown-heavy format
 
 ### Software stack
 
-The prototype runs as a Blender add-on for Blender 3.0+ [@blender-manual], using Python within Blender's runtime and standard libraries for process and HTTP orchestration. External tooling dependencies are intentionally minimal:
+The prototype runs as a Blender add-on for Blender 5.0.0+ [@blender-manual], using Python within Blender's runtime and standard libraries for process and HTTP orchestration. External tooling dependencies are intentionally minimal:
 
 - `ffmpeg` (Linux/Windows) for microphone capture.
 - bundled `atunc` utility (macOS) for microphone capture.
@@ -272,12 +282,12 @@ The prototype runs as a Blender add-on for Blender 3.0+ [@blender-manual], using
 To support repeatable demonstrations and evaluation setup, the following run protocol was used:
 
 1. Install/enable add-on in Blender.
-2. Configure API key and model settings in preferences.
-3. Validate key with the built-in key-test operator.
-4. Confirm audio-device selection (if voice path is used).
+2. Configure API key and response/transcription model settings in preferences.
+3. Run built-in diagnostics such as `Test API Key`, `Test Microphone`, and `Test Transcription` as needed.
+4. Set context options (`Use Conversation Context`, `Context Turns`, `Include Info History (100 lines)`) for the trial.
 5. Run fixed benchmark prompts/tasks and record completion observations.
 
-Because Blender versions and OS audio stacks vary, environment metadata (OS, Blender version, selected models, and device identifier) is logged as part of experiment setup documentation.
+Because Blender versions and OS audio stacks vary, environment metadata (OS, Blender version, selected models, and whether conversation or Info-history context was enabled) is logged as part of experiment setup documentation.
 
 ### Versioned capability statement
 
@@ -289,7 +299,8 @@ Table: Implemented capabilities versus scoped extensions
 |:--|:--|:--|
 | In-viewport text assistant | Yes | N/A |
 | Voice capture and transcription | Yes | N/A |
-| Blender-only domain gating | Yes (toggle) | Richer intent classification |
+| Blender-only domain gating | Yes (always-on prompt prefix) | Richer intent classification |
+| Conversation/context support | Yes (local conversation memory + optional Info-history attachment) | Deeper scene introspection and richer grounding |
 | Retrieval grounding from Manual | Partial (prompt-level alignment) | Full chunk retrieval + citation injection |
 | Procedural step formatting | Yes | Adaptive difficulty/fading |
 | Code execution inside add-on | No autonomous execution | Guarded, opt-in constrained runner |
@@ -301,7 +312,7 @@ This separation supports methodological integrity: the chapter captures both del
 
 Several methodological constraints influence interpretation of later results:
 
-- Scene-context inference is mostly prompt-driven rather than full scene introspection.
+- Scene-context inference is still indirect: it relies on prompts, recent conversation turns, and Info-history snapshots rather than full scene introspection.
 - Grounding is currently strongest at terminology/prompt levels, with full RAG integration staged as extension work.
 - API-dependent behavior introduces latency and availability variability outside Blender control.
 - Microphone quality and device configuration can affect transcription quality and therefore downstream instruction quality.
