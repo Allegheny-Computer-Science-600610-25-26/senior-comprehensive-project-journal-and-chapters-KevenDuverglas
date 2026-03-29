@@ -1,6 +1,6 @@
 # Experiments
 
-This chapter evaluates Suzanne at two levels. First, it reports a completed software-verification pass over the current Blender add-on implementation. Second, because the broader thesis claim is about reducing micro-execution friction for portfolio-oriented Blender work, it defines the rough-draft protocol for a task-based comparison between Suzanne and a baseline search-driven workflow. This two-layer structure is intentional: before asking whether Suzanne helps users work faster or with more confidence, the system must first show that its own operators, panel states, and error paths behave predictably.
+This chapter evaluates Suzanne at two levels. First, it reports a completed software-verification pass over the current Blender add-on implementation. Second, because the broader thesis claim is about reducing micro-execution friction for portfolio-oriented Blender work, it presents three illustrative use-case experiments and defines the rough-draft protocol for a task-based comparison between Suzanne and a baseline search-driven workflow. This two-layer structure is intentional: before asking whether Suzanne helps users work faster or with more confidence, the system must first show that its own operators, panel states, and error paths behave predictably.
 
 ## Experimental Design
 
@@ -23,7 +23,7 @@ Table: Evaluation layers used in this chapter
 | Evaluation layer | Purpose | Evidence in this draft |
 |:--|:--|:--|
 | Software verification | Confirm deterministic behavior of operators, panel rendering, preferences, and state transitions | Automated Python test suite for the Suzanne codebase |
-| Task-based workflow comparison | Compare Suzanne with external-search workflows on portfolio-relevant Blender tasks | Rough-draft protocol, task set, and metric definitions |
+| Task-based workflow comparison | Show how Suzanne supports practical Blender tasks and define a later comparison against external-search workflows | Three illustrative use-case experiments, plus rough-draft protocol, task set, and metric definitions |
 
 This staged design fits the realities of Blender add-on development. Some claims are best tested through deterministic automation, such as whether blank prompts are rejected or whether an error state is rendered correctly. Other claims, such as whether users finish a bevel-and-shading task faster with in-panel guidance, require human observation in realistic scene work.
 
@@ -58,7 +58,7 @@ def test_send_message_execute_rejects_blank_prompt():
 
 This test matters because a tutoring tool that fails opaquely can interrupt learner momentum faster than one that simply refuses an invalid request. The desired behavior is not only cancellation, but cancellation with a concrete, beginner-readable explanation.
 
-The next example verifies that network failure surfaces a visible error state instead of silently failing:
+The next example verifies that network failure surfaces a visible error state instead of silently failing: 
 
 ```python
 with mock.patch.object(
@@ -101,6 +101,78 @@ Table: Summary of current automated verification outcomes
 | State lifecycle | Scene properties register idempotently and clear cleanly | Pass |
 
 When the local test suite was executed, all `65` tests passed in `0.30` seconds. This is not the same as proving that every model-generated instruction is correct. What it does show is that the non-model scaffolding around Suzanne is stable: validation works, user-facing failures are surfaced, panel states are coherent, and repeated runs do not corrupt add-on state. For a system intended to support learners, this reliability layer is a necessary prerequisite for broader usability claims.
+
+### Experiment 1: Basic question answering in the Blender viewport
+
+The first use-case experiment tests Suzanne's most basic instructional path: whether a user can ask a simple Blender question inside the add-on and receive a correct, readable, and immediately actionable response without leaving the interface. For this trial, the prompt entered into Suzanne was, "How do I add a light to my scene in Blender?" This is a suitable first test because lighting is a common beginner workflow, the expected procedure is easy to verify, and the task exercises the core text-query pipeline from prompt entry to visible response.
+
+![Experiment 1 screenshot showing Suzanne answering a simple lighting question inside Blender's N-panel.](images/experiment1_add_light.png){fig-cap="Figure X. Experiment 1: Suzanne answers a basic lighting question in Blender's N-panel with step-by-step procedural guidance. Screenshot by the author." width=80%}
+
+Suzanne returned a numbered, step-by-step answer that instructed the user to remain in Object Mode, open the Add menu with `Shift + A`, choose a light type, position the light, and then adjust its properties in the right-side panels. This response is functionally correct for standard Blender interaction and uses interface terms that match what a beginner would actually see on screen. Just as importantly, the answer is procedural rather than vague. Instead of describing lighting conceptually, Suzanne gives the user a sequence they can follow immediately in the same workspace.
+
+Table: Summary of Experiment 1
+
+| Aspect | Observation |
+|:--|:--|
+| Goal | Verify that Suzanne can answer a simple Blender question correctly inside the N-panel |
+| Prompt | "How do I add a light to my scene in Blender?" |
+| Observed output | Suzanne produced a short numbered procedure for adding, placing, and adjusting a light |
+| Outcome | Successful |
+| Interpretation | Suzanne's baseline question-answering workflow functioned correctly and provided usable in-viewport guidance |
+
+Although this experiment is small, it matters for the broader thesis argument. Before Suzanne can be evaluated on more complex modeling or presentation tasks, it must first demonstrate that its basic interaction loop works reliably for ordinary user questions. This first experiment therefore serves as a direct, user-facing complement to the automated software tests reported above.
+
+### Experiment 2: Complex procedural guidance for fire simulation
+
+The second use-case experiment tests whether Suzanne can support a more advanced Blender workflow that requires multiple ordered setup steps rather than a short, single-action answer. For this trial, the prompt entered into Suzanne was, "How do I create a basic fire simulation in Blender?" Fire simulation is a stronger stress test than the first experiment because it involves several connected systems, including a simulation domain, a flow emitter, physics settings, material setup, and baking or caching behavior. In other words, the task is complex enough that an incomplete or poorly ordered answer would be much harder for a user to apply successfully.
+
+Because Suzanne's response exceeded the visible height of the N-panel, the result was captured in two screenshots.
+
+![Experiment 2 screenshot showing the first part of Suzanne's fire-simulation response in Blender's N-panel.](images/experiment2_fire_response_1.png){fig-cap="Figure X. Experiment 2, part 1: Suzanne begins a multi-step explanation for creating a basic fire simulation in Blender. Screenshot by the author." width=80%}
+
+![Experiment 2 screenshot showing the continuation of Suzanne's fire-simulation response in Blender's N-panel.](images/experiment2_fire_response_2.png){fig-cap="Figure X. Experiment 2, part 2: Suzanne continues the fire-simulation workflow with baking, material, and render guidance. Screenshot by the author." width=80%}
+
+Suzanne returned a structured, ordered procedure that included creating a domain object, configuring the domain as a gas simulation, adding a separate emitter, setting the emitter as a fire flow source, baking the simulation, assigning a material, and adjusting render settings. This is the kind of longer procedural answer that Suzanne is intended to support: it keeps the user inside Blender while still presenting a workflow that would otherwise require searching across multiple external references.
+
+The generated response is also broadly consistent with the standard workflow described in the Blender Manual, which explains that gas simulations require at least a domain object and a flow object, followed by material assignment and cache baking [@blender-manual]. Suzanne's answer therefore appears substantively correct at the workflow level, even though this experiment primarily documents response quality and procedural completeness rather than a full quantitative timing comparison.
+
+Table: Summary of Experiment 2
+
+| Aspect | Observation |
+|:--|:--|
+| Goal | Evaluate whether Suzanne can provide usable guidance for a more complex Blender simulation task |
+| Prompt | "How do I create a basic fire simulation in Blender?" |
+| Observed output | Suzanne produced a multi-step workflow covering domain setup, emitter setup, bake steps, material assignment, and render considerations |
+| Outcome | Successful as a complex-response test |
+| Interpretation | Suzanne handled a longer, more technically demanding query and returned guidance that broadly matches documented Blender workflow |
+
+This second experiment strengthens the evaluation by showing that Suzanne is not limited to very short beginner questions. It can also generate longer instructional sequences for tasks that involve several dependent setup stages. That capability is central to the thesis claim that in-viewport guidance can reduce friction for practical Blender work.
+
+### Experiment 3: Context-aware reconstruction of recent Blender actions
+
+The third use-case experiment evaluates Suzanne's context feature rather than its general question-answering ability alone. In this trial, the `Include Info History (100 lines)` option was enabled in the Context panel, and the user asked, "what actions did I just perform in Blender? Please summarize them in order and explain what I was trying to do." This is an important test because it asks Suzanne to infer recent activity from Blender session history instead of answering a generic procedural question from prior knowledge alone.
+
+As with the previous experiment, the response extended beyond the visible panel height and was captured in two screenshots.
+
+![Experiment 3 screenshot showing the prompt and the first part of Suzanne's context-aware response in Blender's N-panel.](images/experiment3_context_response_1.png){fig-cap="Figure X. Experiment 3, part 1: Suzanne uses the enabled Info History context to summarize recent Blender actions in order. Screenshot by the author." width=80%}
+
+![Experiment 3 screenshot showing the continuation of Suzanne's context-aware response in Blender's N-panel.](images/experiment3_context_response_2.png){fig-cap="Figure X. Experiment 3, part 2: Suzanne completes its summary of the recent Blender actions. Screenshot by the author." width=80%}
+
+Suzanne responded with an ordered summary of recent scene operations, including deleting objects, adding a cube, scaling it, rotating it, translating it, resizing it again, adding a bevel modifier, and applying smooth shading. It then interpreted those actions as part of a likely modeling workflow, specifically suggesting that the cube may have been prepared as a domain object for a fire simulation. This is a meaningful result because it shows Suzanne using recent session context to produce a situationally grounded explanation rather than only returning generic help text.
+
+Methodologically, this experiment is especially relevant to the thesis because it addresses one of the core limitations of many external help sources: they do not know what the user has just done. By contrast, Suzanne can incorporate Blender's recent Info history and reflect it back into the conversation. In the captured session, conversation context was also enabled, so this example should be interpreted as evidence of context-aware assistance rather than as an isolated benchmark of Info-history retrieval alone. Even with that caveat, the response clearly tracks recent viewport activity in a way that ordinary static documentation cannot.
+
+Table: Summary of Experiment 3
+
+| Aspect | Observation |
+|:--|:--|
+| Goal | Evaluate whether Suzanne can use recent Blender session context to infer and summarize user actions |
+| Prompt | "what actions did I just perform in Blender? Please summarize them in order and explain what I was trying to do." |
+| Observed output | Suzanne reconstructed an ordered sequence of recent modeling operations and inferred the likely purpose of the workflow |
+| Outcome | Successful as a context-aware assistance test |
+| Interpretation | Suzanne used recent session context to generate a grounded, workflow-specific explanation rather than only generic Blender advice |
+
+Together, the first three experiments illustrate a useful progression of capability: basic question answering, longer procedural guidance for a complex task, and context-aware interpretation of recent user actions. That progression supports the thesis claim that Suzanne is not merely a generic chatbot embedded in Blender, but a more situated instructional assistant designed to reduce micro-execution friction inside the viewport.
 
 ### Rough-draft protocol for the task-based comparison
 
@@ -153,7 +225,7 @@ Alongside numeric measures, it is useful to record short qualitative notes durin
 
 ### Preliminary interpretation of the current evidence
 
-At the current draft stage, the strongest completed evidence is the software-verification layer, not the human-subject comparison. Even so, the automated results already support several thesis claims indirectly.
+At the current draft stage, the strongest completed evidence is still the software-verification layer rather than a full participant comparison. Even so, the chapter now also includes three illustrative use-case experiments showing that Suzanne can answer a simple Blender question, produce a longer multi-step workflow for a more complex task, and use recent Blender session context to summarize what the user has just done. These examples do not replace a formal study, but they do provide concrete demonstrations of the kinds of support Suzanne is designed to offer.
 
 First, Suzanne appears technically stable enough to support repeated task trials. The suite exercises the same kinds of transitions that matter in actual use: starting from an empty prompt, handling a successful request, surfacing network failure, toggling microphone state, updating conversation history, and rendering empty-state or success-state UI branches. Second, the tests reinforce the design emphasis on explicit feedback. Instead of silently swallowing a failure, the add-on reports states such as `Idle (error)` and surfaces readable diagnostics. Third, the UI tests show that the system was built around instructional clarity rather than decorative complexity: status cards, output previews, and placeholder messages are treated as part of the evaluated behavior rather than incidental details.
 
