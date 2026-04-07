@@ -99,4 +99,4 @@ Suzanne is designed to address this gap by:
 3. Providing optional Python snippets under explicit guardrails informed by LLM security literature [@daspaper2025llmsecurity]; and  
 4. Targeting modeling, shading, and presentation workflows that contribute directly to students’ and independent artists’ portfolios.  
 
-The next chapter details how these ideas are realized in the system’s architecture, including the N-panel UI, retrieval and grounding pipeline, and safe code-execution model, as well as the evaluation design used to compare Suzanne to baseline search-driven workflows.
+The next chapter details how these ideas are realized in the system’s architecture, including the N-panel UI, retrieval and grounding pipeline, safe code-execution model, and the evaluation framework used to assess Suzanne through software verification and task-based experiments.

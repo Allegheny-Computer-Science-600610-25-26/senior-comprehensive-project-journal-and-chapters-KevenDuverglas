@@ -75,7 +75,7 @@ Because Blender is increasingly used in research and engineering [@rohe2022synth
 
 5. **Portfolio-driven defaults.** Provide guidance for modeling, lighting, and rendering workflows commonly used in portfolio pieces.
 
-6. **Evaluation.** Compare Suzanne to baseline search-driven workflows for time-on-task, accuracy, and perceived usefulness.
+6. **Evaluation.** Assess Suzanne through software verification and task-based Blender experiments focused on reliability, instructional clarity, and workflow support.
 
 ## Assumptions, limitations, and delimitations
 
@@ -127,10 +127,10 @@ In addition to inherent limitations, the project also includes deliberate **desi
   Although speech-to-text could further reduce friction for some users, the current version does not implement live microphone capture or continuous audio transcription. All prompts are entered as text, and any audio-based features are limited to explicitly uploaded or recorded snippets. This avoids additional privacy and consent complexity and keeps the interaction model simpler for evaluation.
 
 - **No end-user analytics or behavioral tracking.**  
-  Suzanne does not collect telemetry or analytics about how users interact with the add-on. There are no built-in dashboards tracking which prompts are most common, which steps cause difficulty, or how often scripts are executed. While such data could be valuable for iterative design and research, it would also introduce significant privacy and governance concerns. Instead, study data for this thesis comes from **explicitly consented** user studies, where participants are informed about what is recorded and why.
+  Suzanne does not collect telemetry or analytics about how users interact with the add-on. There are no built-in dashboards tracking which prompts are most common, which steps cause difficulty, or how often scripts are executed. While such data could be valuable for iterative design and research, it would also introduce significant privacy and governance concerns. Instead, this thesis relies on local software verification and authored task demonstrations rather than behavioral tracking or human-subject data collection.
 
-- **Voluntary, anonymized study participation.**  
-  Any formal evaluation of Suzanne is conducted with volunteers who can decline participation or withdraw without penalty. Collected data—such as task completion times, error rates, and survey responses—is anonymized or pseudonymized before analysis. This means the project does not attempt to model long-term user behavior across semesters or track individuals over time; its conclusions are limited to the specific cohorts and conditions studied.
+- **No human-subject dataset in this thesis.**
+  The thesis does not report survey responses, timing logs, or other human-subject study data. Claims are therefore limited to implemented system behavior, automated reliability checks, and the documented task-based experiments presented later. Formal user studies remain future work.
 
 - **Single primary documentation source.**  
   For grounding, Suzanne relies primarily on the Blender Manual and does not, in this version, integrate other textual sources such as third-party books, course notes, or forum archives [@blender-manual]. This delimitation keeps the retrieval pipeline manageable and the terminology consistent, but it also means that insights from community best practices (for example, from popular tutorial series or studio pipelines) are only reflected indirectly through prompt design, not through direct retrieval.
@@ -146,7 +146,7 @@ Submitted prompts and audio files are processed through a third-party API. Resea
 
 To reduce these risks, Suzanne adopts a **local-first** design wherever possible. API keys are stored only on the user’s machine, inside Blender’s add-on preferences, and are never transmitted to any external server controlled by the add-on developer. Suzanne does not implement its own logging of prompts or responses; once a session ends, there is no add-on-level history of user queries. The only data sent to the third-party provider is the text and/or audio that the user explicitly submits as part of a request. The interface includes clear warnings about avoiding sensitive material (e.g., real names, proprietary data, or confidential assets), and the documentation encourages users to consult institutional policies on AI tool usage before integrating Suzanne into graded coursework or research workflows.
 
-In any formal study of Suzanne (for example, as part of this thesis evaluation), participants are informed about what data leaves their machine, which provider processes it, and how long it may be retained according to that provider’s terms [@daspaper2025llmsecurity]. Participants can choose to disable API-based features entirely and still use the add-on as a structured reminder of manual workflows grounded in the Blender Manual [@blender-manual]. In classroom settings, instructors are encouraged to provide alternative, non-AI pathways to complete assignments so that students who are uncomfortable with third-party processing are not penalized.
+In any future formal study of Suzanne, volunteers should be informed about what data leaves their machine, which provider processes it, and how long it may be retained according to that provider’s terms [@daspaper2025llmsecurity]. They should also be able to disable API-based features entirely and still use the add-on as a structured reminder of manual workflows grounded in the Blender Manual [@blender-manual]. In classroom settings, instructors are encouraged to provide alternative, non-AI pathways to complete assignments so that students who are uncomfortable with third-party processing are not penalized.
 
 
 ### **Reliability and user control**

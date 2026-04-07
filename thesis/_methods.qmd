@@ -321,4 +321,4 @@ These limits are not hidden defects; they are declared boundaries that shape val
 
 ## Transition to evaluation
 
-This Methods chapter established the system design and implementation pipeline used to operationalize Suzanne as an in-viewport instructional assistant. The next chapter evaluates this method against baseline search-driven workflows using task completion metrics, quality-oriented outcome criteria, and user-perception measures aligned with portfolio-relevant Blender tasks.
+This Methods chapter established the system design and implementation pipeline used to operationalize Suzanne as an in-viewport instructional assistant. The next chapter evaluates this method through software verification and task-based experiments aligned with portfolio-relevant Blender tasks.
