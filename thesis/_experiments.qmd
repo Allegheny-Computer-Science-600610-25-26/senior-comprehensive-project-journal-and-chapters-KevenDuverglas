@@ -25,7 +25,7 @@ Table: Evaluation layers used in this chapter
 | Software verification | Confirm deterministic behavior of operators, panel rendering, preferences, and state transitions | Automated Python test suite with `65` passing checks |
 | Task-based evaluation | Demonstrate usable in-viewport guidance across representative Blender workflows | Three authored experiments covering basic question answering, complex procedure generation, and context-aware action reconstruction |
 
-This design fits the realities of Blender add-on development. Some claims are best tested through automation, such as whether blank prompts are rejected or whether an error state is rendered correctly. Other claims are best illustrated through concrete task runs in the Blender interface, where the usefulness of the resulting guidance can be seen directly.
+This design fits the realities of Blender add-on development. Some claims are best tested through automation, such as whether blank prompts are rejected or whether an error state is rendered correctly. Other claims are best illustrated through concrete task runs in the Blender interface, where Suzanne's generated guidance can be inspected directly as numbered in-panel instructions, longer procedural responses, or context-aware summaries of recent user actions. In this chapter, that evidence is presented through captured N-panel outputs and experiment summaries that pair each prompt with the returned guidance and the observed outcome.
 
 ### Evaluation scope
 
@@ -35,7 +35,7 @@ This chapter reports completed software-verification results and task demonstrat
 
 ### Completed software verification
 
-Before the task demonstrations, the build was tested as a software artifact. The Suzanne repository includes a Python test suite covering operators, panel behavior, preferences, state registration, and shared utility functions. These tests use a mocked `bpy` environment so that Blender-specific logic can be exercised repeatably without manual clicking inside the UI. This is especially useful for edge cases that are tedious to reproduce by hand, such as missing API keys, offline requests, empty output panes, or repeated property registration.
+Before the task demonstrations, the build was tested as a software artifact. The Suzanne repository includes a Python test suite covering operators, panel behavior, preferences, state registration, and shared utility functions. These tests use a mocked `bpy` environment so that Blender-specific logic can be exercised repeatably without manual clicking inside the UI. In practice, this means the test harness installs lightweight stand-ins for Blender's Python modules and types, including fake `bpy`, `bpy.types`, and `bpy.props` objects, along with test versions of `Scene`, preferences, operators, and context state. The add-on code can then be imported and executed as if Blender were present, while the tests still control the prompt text, status fields, reports, and preferences values directly in Python. This is especially useful for edge cases that are tedious to reproduce by hand, such as missing API keys, offline requests, empty output panes, or repeated property registration.
 
 The first set of checks verifies that Suzanne rejects invalid input early and with a readable message:
 
@@ -87,20 +87,20 @@ assert sidebar._status_presentation(scene, False) == (
 
 Even though this is a small UI test, it is directly relevant to the thesis argument. Suzanne is meant to reduce micro-execution confusion, so its own status language must stay simple and legible. The suite also checks other presentation branches, including `Ready`, `Sending...`, `Recording...`, conversation empty states, and the hiding of API-key details in preferences.
 
-The `65` passing checks map directly onto the verification areas summarized in the following table. The table is therefore not a separate high-level abstraction; it is a grouped explanation of what those `65` checks were actually checking for across the add-on.
+The `65` passing checks were not concentrated in one narrow path. When the suite was collected, it consisted of `23` operator checks, `25` shared-utility/helper checks, `8` panel/UI checks, `4` add-on registration/init checks, `2` preference checks, `2` state-lifecycle checks, and `1` support-harness check. The following table groups those counts into the main verification areas exercised across the add-on.
 
 Table: Summary of current automated verification outcomes
 
-| Test family | What the checks verified | Why it matters |
-|:--|:--|:--|
-| Prompt validation | Blank or whitespace-only prompts are rejected and reported in readable language | Prevents confusing empty requests and keeps feedback beginner-friendly |
-| Send pipeline | Successful requests update transcript, latest response, conversation state, and status fields consistently | Confirms the core interaction loop works end to end |
-| Error handling | Offline or API failures surface explicit error states and readable diagnostics | Makes failures recoverable instead of silent |
-| Panel usability | Status cards, empty states, previews, and UI presentation branches render expected labels and messages | Keeps the interface legible during real task work |
-| Preference safety | API-key controls and diagnostics behave correctly without exposing sensitive setup details | Supports trust and safer configuration |
-| State lifecycle | Scene properties register idempotently, persist correctly, and clear without corruption | Prevents instability across repeated runs |
+| Test family | Checks | What the checks verified | Why it matters |
+|:--|--:|:--|:--|
+| Shared utilities and helper logic | `25` | Text cleanup, preview formatting, status mapping, Info-history helpers, storage helpers, HTTP wrappers, path resolution, and fallback branches in common utility code | Confirms the low-level support functions behave consistently before they are used by the UI and operators |
+| Operators and interaction pipelines | `23` | Prompt validation, send-message flow, microphone flow, diagnostics operators, conversation actions, API-key checks, and success/error branches across the main interaction logic | Confirms the core interaction loop works end to end and fails visibly when something goes wrong |
+| Panel rendering and UI states | `8` | Status-card presentation, collapsed/expanded cards, output previews, empty states, conversation previews, and general panel draw behavior | Keeps the interface legible and predictable during real task work |
+| Registration and state lifecycle | `6` | Add-on `register()` / `unregister()` behavior, property creation/removal, and repeated setup/teardown paths | Prevents instability across repeated runs and supports reproducible Blender enable/disable cycles |
+| Preference safety and setup | `2` | API-key masking/reveal behavior and diagnostics controls in the preferences UI | Supports trust and safer configuration without exposing sensitive setup details |
+| Support harness | `1` | Test-harness module loading and import-path setup for the stubbed Blender environment | Ensures the automated verification setup itself can reliably import and exercise the add-on code |
 
-Together, these categories account for the breadth of the `65` checks. The significance of the test suite is therefore not only the number itself, but the spread of coverage across validation, interaction flow, failure behavior, interface clarity, and add-on state management.
+Together, these categories account for the full breadth of the `65` collected checks. The significance of the test suite is therefore not only the number itself, but the spread of coverage across helper logic, interaction flow, UI behavior, setup safety, and add-on lifecycle management.
 
 When the local test suite was executed, all `65` checks passed in `0.30` seconds. This is not the same as proving that every model-generated instruction is correct. What it does show is that the non-model scaffolding around Suzanne is stable: validation works, user-facing failures are surfaced, panel states are coherent, and repeated runs do not corrupt add-on state. For a system intended to support learners, this reliability layer is a necessary prerequisite for broader usability claims.
 

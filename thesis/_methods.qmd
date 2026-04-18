@@ -267,6 +267,8 @@ $$
 
 where $\mathbf{e}_q$ is the query embedding and $\mathbf{e}_{d_i}$ is the embedding of document chunk $d_i$. Top-ranked chunks are then inserted into the generation context to reduce terminology drift and menu-path hallucination.
 
+For example, if a user asks, "How do I add and configure a Subdivision Surface modifier?", the retrieval extension would embed that query and compare it against stored Blender Manual chunks covering modifier basics, the Subdivision Surface modifier page, and relevant interface-path explanations. The chunks with the highest cosine-similarity scores would be selected, and Suzanne would insert those passages into the prompt context before generation. In practice, this means the response model would be grounded on the specific Manual text most relevant to that question, increasing the likelihood that the returned steps mention the correct mode assumptions, modifier name, and panel path rather than producing generic modeling advice. The same ranking process would apply to other queries, such as asking where to find shader-node settings or how to troubleshoot a missing operator in the current mode.
+
 ### Response schema for procedural clarity
 
 Regardless of input modality, the response format is designed to preserve instructional structure:
