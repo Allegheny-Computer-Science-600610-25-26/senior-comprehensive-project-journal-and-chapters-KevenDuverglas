@@ -188,10 +188,6 @@ In response, Suzanne restricts script generation to a narrow slice of Blender’
 Suzanne also leverages Blender’s existing safety mechanisms. Scripts run within Blender’s Python environment, which already exposes undo and redo for most scene operations. Users are encouraged to save .blend files frequently and to experiment on copies rather than production scenes. The documentation includes a “safety checklist” that recommends: (1) saving before executing any script, (2) inspecting code for obviously destructive calls, and (3) using undo immediately if an unexpected change occurs. These guardrails do not eliminate all risk, but they align Suzanne with best-practice recommendations for LLM-driven code execution: minimize permissions, maximize visibility, and keep humans firmly in control [@daspaper2025llmsecurity]. In combination with the privacy and consent measures above, this scoped design aims to make Suzanne a responsible, student-friendly integration of AI into Blender rather than a source of hidden technical or ethical debt.
 
 
-## What does *not* belong in the Introduction
-
-Practical modeling recipes, shading fixes, or operator sequences should not be included here. These belong in **Methods** or an **Appendix**, where Suzanne’s generated steps can be presented clearly. The Introduction is focused on background, motivation, problem definition, goals, scope, and ethics.
-
 ## Chapter roadmap
 
 The remainder of this thesis proceeds as follows:
