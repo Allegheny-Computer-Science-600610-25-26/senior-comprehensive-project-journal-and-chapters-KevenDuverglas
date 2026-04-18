@@ -31,7 +31,7 @@ My motivation for this project is deeply personal. Over roughly six years of lea
 
 This project is also motivated by gratitude toward the Blender community. As an open-source ecosystem, Blender has given me access to free tools, tutorials, documentation, and community support that shaped me not only as a 3D learner, but also as a person. Building Suzanne is therefore a way of giving something back. If the add-on can reduce the confusion that I experienced as a beginner, then it contributes to the same community that helped me grow. In that sense, Suzanne is both a technical system and a community-oriented teaching tool aimed at helping newer users feel less isolated when they get stuck.
 
-Meanwhile, early-career 3D creators—students, hobbyists, and emerging artists—grow primarily through their **portfolios**. Recruiters and instructors evaluate:
+Meanwhile, early-career 3D creators—students, hobbyists, and emerging artists—grow primarily through their portfolios. Recruiters and instructors evaluate:
 
 - Clean topology visible in wireframe or clay renders  
 - High-quality lighting and presentation  
