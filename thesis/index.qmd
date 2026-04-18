@@ -1,5 +1,4 @@
 ---
-# EDIT AT YOUR OWN PERIL #
 format:
   html:
     toc: true
@@ -10,7 +9,6 @@ format:
   allegheny-cis-pdf: default
 
 natbiboptions: numbers
-# EDIT AT YOUR OWN PERIL #
 
 title: Suzanne
 
