@@ -27,7 +27,9 @@ This project introduces **Suzanne**, a Blender add-on that lives in the right-ha
 
 ## Motivation (why this matters for students and portfolios) 
 
-In my personal experience learning Blender over the past five years, most challenges involved “micro-execution”—not understanding the concept of what to do, but figuring out *which* operator to call, *what* mode to be in, and *what* order to perform actions. Research has shown that Blender’s growing scope and tool density can overwhelm newcomers and slow their learning process [@soni2023blenderreview]. Even small tasks such as beveling edges without shading artifacts or setting up lighting often require watching multiple tutorials or searching through forums.
+My motivation for this project is deeply personal. Over roughly six years of learning Blender, I repeatedly ran into the same problem: I often understood the *goal* of the task, but not the exact steps needed to carry it out. The hardest part was frequently not creativity, but information seeking. I had to stop working, search across videos, forum posts, Discord threads, and documentation, and then decide which explanation was correct for the version of Blender I was using. Research has shown that Blender’s growing scope and tool density can overwhelm newcomers and slow their learning process [@soni2023blenderreview]. My own experience closely matches that pattern of “micro-execution” friction: figuring out *which* operator to call, *what* mode to be in, and *what* order to perform actions.
+
+This project is also motivated by gratitude toward the Blender community. As an open-source ecosystem, Blender has given me access to free tools, tutorials, documentation, and community support that shaped me not only as a 3D learner, but also as a person. Building Suzanne is therefore a way of giving something back. If the add-on can reduce the confusion that I experienced as a beginner, then it contributes to the same community that helped me grow. In that sense, Suzanne is both a technical system and a community-oriented teaching tool aimed at helping newer users feel less isolated when they get stuck.
 
 Meanwhile, early-career 3D creators—students, hobbyists, and emerging artists—grow primarily through their **portfolios**. Recruiters and instructors evaluate:
 
@@ -63,19 +65,21 @@ This project addresses that gap by building an in-viewport assistant that:
 
 Because Blender is increasingly used in research and engineering [@rohe2022syntheticdic], reliable execution and clear documentation also support academic reproducibility.
 
-## Project goals (what this thesis will deliver)
+## Project goals and implemented features (what this thesis delivers)
 
-1. **Step-based teaching.** Provide concise, numbered instructions that reflect Blender’s operator names and panel paths, always stating prerequisites (mode, selection, object type).
+Because Suzanne is now implemented as a working Blender add-on, this thesis delivers both a design argument and a concrete feature set. The finished system is intended to:
 
-2. **Documentation grounding.** Integrate retrieval over the Blender Manual to maintain terminology accuracy and consistency with Blender’s UI labels [@blender-manual; @gao2023retrieval].
+1. **Provide in-viewport step-based teaching.** Return concise, numbered instructions directly in Blender’s N-panel using Blender’s operator names, panel paths, and explicit prerequisites such as mode, selection, and object type.
 
-3. **Learning iteration.** Support follow-ups like *next step*, *repeat this*, and corrective branches (e.g., faceting → Shade Smooth → Auto Smooth → Recalculate Normals).
+2. **Support flexible user input.** Let users ask for help through typed prompts or voice input so that guidance can fit different working styles and reduce the need to leave the viewport [@blender-manual].
 
-4. **Optional code execution with guardrails.** Present small Python snippets that can be safely executed after user confirmation, leveraging Blender’s scripting environment [@rohe2022syntheticdic].
+3. **Preserve learning continuity.** Support follow-up interactions through local conversation history, allowing users to ask for the next step, request clarification, or continue a task without restarting the explanation from scratch.
 
-5. **Portfolio-driven defaults.** Provide guidance for modeling, lighting, and rendering workflows commonly used in portfolio pieces.
+4. **Offer context-aware assistance.** Allow recent conversation turns and optional Blender Info history to be attached so Suzanne can respond to what the user has just been doing rather than only answering decontextualized questions.
 
-6. **Evaluation.** Assess Suzanne through software verification and task-based Blender experiments focused on reliability, instructional clarity, and workflow support.
+5. **Deliver reliable, beginner-readable feedback.** Surface clear status messages, validation errors, and recoverable failure states so the tool itself does not add more confusion to an already difficult learning environment.
+
+6. **Focus on portfolio-relevant workflows and evaluate the result.** Prioritize guidance for modeling, lighting, rendering, and troubleshooting tasks that matter to student portfolios, and assess the finished prototype through software verification and task-based Blender experiments focused on reliability, instructional clarity, and workflow support.
 
 ## Assumptions, limitations, and delimitations
 
