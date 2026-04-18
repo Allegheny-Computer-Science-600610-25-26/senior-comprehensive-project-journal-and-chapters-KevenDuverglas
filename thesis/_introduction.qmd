@@ -45,7 +45,7 @@ Suzanne aims to address this gap: **deliver high-clarity, minimal-step instructi
 
 This approach is supported by educational research showing that AI-based learning tools improve cognitive outcomes when instructional content is concise, context-specific, and directly actionable [@luo2025ailearningtools]. Suzanne follows these principles by placing guidance beside the active viewport and presenting it as small, verifiable steps that can be performed immediately.
 
-## Problem statement (what gap this work addresses)
+## Problem statement
 
 Blender learners lose time, motivation, and project momentum because most guidance lives **outside** the application, spread across long YouTube videos, scattered forum posts, or generic documentation. These sources are rarely tailored to the user’s current mode, object selection, or workflow context. As a result, beginners struggle with:
 
@@ -65,7 +65,7 @@ This project addresses that gap by building an in-viewport assistant that:
 
 Because Blender is increasingly used in research and engineering [@rohe2022syntheticdic], reliable execution and clear documentation also support academic reproducibility.
 
-## Project goals and implemented features (what this thesis delivers)
+## Project goals and implemented features
 
 Because Suzanne is now implemented as a working Blender add-on, this thesis delivers both a design argument and a concrete feature set. The finished system is intended to:
 
