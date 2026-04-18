@@ -15,9 +15,9 @@ Rather than treating model responses as opaque outputs, the implementation treat
 
 ### Phase 1: Requirement extraction
 
-Requirements were extracted from three sources: (a) Blender documentation and interface behavior [@blender-manual], (b) prior studies on beginner friction in Blender [@soni2023blenderreview], and (c) AI-learning-tool findings emphasizing in-context and actionable guidance [@luo2025ailearningtools].
+Requirements were extracted from three sources: (a) Blender documentation and interface behavior [@blender-manual], (b) prior studies on beginner friction in Blender [@soni2023blenderreview], and (c) AI-learning-tool findings emphasizing in-context and actionable guidance [@luo2025ailearningtools]. This phase did not produce a separate machine-readable requirements file. Instead, it produced a small design specification that was carried forward as explicit implementation criteria and is formalized later in this chapter through the requirement-to-implementation traceability table.
 
-The resulting requirement set emphasized:
+That design specification emphasized:
 
 - Locality: assistance must appear in the active workspace, not in a separate website.
 - Procedural clarity: responses should be short, ordered, and immediately actionable.
@@ -26,7 +26,9 @@ The resulting requirement set emphasized:
 
 ### Phase 2: Prototype architecture and implementation
 
-The first implementation target was a Blender add-on written in Python against Blender's `bpy` API and loaded through the standard add-on registration system (`register()` / `unregister()`). Persistent interaction state is stored in `Scene` properties, user-level configuration is stored in add-on preferences, and local conversation history is persisted to disk with a temporary-directory fallback. This choice aligns with Blender's architecture and keeps the workflow entirely in-app [@blender-manual].
+The first implementation target was a Blender add-on written in Python against Blender's `bpy` API and loaded through the standard add-on registration system (`register()` / `unregister()`). In the implemented add-on, `register()` registers the preferences class, interaction operators, diagnostic operators, and sidebar panel, then calls `ensure_props()` to attach runtime fields to `bpy.types.Scene` and creates the local recordings directory. `unregister()` removes those `Scene` properties with `clear_props()` and unregisters the same classes in reverse order so Blender does not retain stale UI state between enable/disable cycles.
+
+Persistent interaction state is stored in `Scene` properties so the panel can redraw from shared runtime state after each operator call. Concretely, these properties include the current prompt, microphone-active flag, status string, last transcript, last response, selected conversation, context toggles, and the expand/collapse state of the N-panel cards. User-level configuration is stored separately in add-on preferences, including the API key, response model, transcription model, filename prefix, and conversation auto-save setting. Local conversation history is then persisted to a JSON store (`suzanne_conversations.json`) in the add-on's data directory, with a temporary-directory fallback if the normal path is unavailable. This choice aligns with Blender's architecture and keeps the workflow entirely in-app [@blender-manual].
 
 The implementation was divided into a small set of focused modules so that interface code, mutable state, and side-effecting operations could be reasoned about separately during debugging and testing. The add-on entry point (`__init__.py`) declares add-on metadata, imports the registered classes, and coordinates `register()` / `unregister()` calls. The sidebar UI is defined in `panel.py`; per-scene state registration and cleanup live in `state.py`; side-effecting actions such as text submission, microphone capture, diagnostics, and conversation management live in `operators.py`; add-on-level settings such as API key, model selection, audio device handling, and diagnostics UI live in `preferences.py`; and shared helpers for HTTP requests, Info-history capture, local storage, audio-device enumeration, and UI text cleanup live in `common.py`. This modular split made it easier to trace failures to either presentation logic, state wiring, or external-process/network behavior.
 
