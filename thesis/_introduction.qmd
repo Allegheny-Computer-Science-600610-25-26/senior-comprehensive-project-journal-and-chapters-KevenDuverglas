@@ -10,7 +10,7 @@ This project introduces **Suzanne**, a Blender add-on that lives in the right-ha
 
 ![Blender interface with key areas visible: 3D Viewport (center), Outliner (right), Properties (bottom-right), and the N-panel (right sidebar).](images/blender_ui.png){fig-cap="Figure 1. The Blender interface. Beginners juggle regions, modes, operators, and modifier order. Screenshot by the author." width=100%}
 
-## Key terms and concepts (grounding the reader)
+## Key terms and concepts
 
 - **N-panel.** A vertical sidebar toggled with **N** in the 3D Viewport hosting add-ons and tools. Suzanne is located here to keep guidance directly inside the creative workspace [@blender-manual].
 
@@ -142,7 +142,7 @@ In addition to inherent limitations, the project also includes deliberate **desi
 By making these assumptions, limitations, and delimitations explicit, the thesis clarifies the conditions under which Suzanne is expected to work well and the boundaries beyond which its claims should be treated cautiously. Later chapters return to these points when interpreting evaluation results and outlining directions for future work.
 
 
-## Ethical considerations (narrative)
+## Ethical considerations
 
 ### **Privacy and consent**
 
