@@ -1,7 +1,5 @@
 # Methods
 
-## Chapter purpose and methodological stance
-
 This chapter explains how Suzanne was designed, implemented, and prepared for evaluation as an in-viewport Blender assistant. The Introduction established the core problem as micro-execution friction (mode, operator, panel path, and action order), while Related Work positioned Suzanne against two common alternatives: external learning resources and automation-first AI add-ons [@blender-manual; @soni2023blenderreview; @blendergpt; @blender-mcp]. Methods therefore focuses on *how* the system operationalizes those insights in software, interface behavior, and safety controls.
 
 The project follows a design-and-build methodology common in applied HCI and educational tooling:
@@ -28,7 +26,9 @@ The resulting requirement set emphasized:
 
 ### Phase 2: Prototype architecture and implementation
 
-The first implementation target was a Blender add-on loaded through the standard add-on registration system (`register()` / `unregister()`), with persistent interaction state stored in `Scene` properties, user-level configuration stored in add-on preferences, and local conversation history persisted to disk with a temporary-directory fallback. This choice aligns with Blender's architecture and keeps the workflow entirely in-app [@blender-manual].
+The first implementation target was a Blender add-on written in Python against Blender's `bpy` API and loaded through the standard add-on registration system (`register()` / `unregister()`). Persistent interaction state is stored in `Scene` properties, user-level configuration is stored in add-on preferences, and local conversation history is persisted to disk with a temporary-directory fallback. This choice aligns with Blender's architecture and keeps the workflow entirely in-app [@blender-manual].
+
+The implementation was divided into a small set of focused modules so that interface code, mutable state, and side-effecting operations could be reasoned about separately during debugging and testing. The add-on entry point (`__init__.py`) declares add-on metadata, imports the registered classes, and coordinates `register()` / `unregister()` calls. The sidebar UI is defined in `panel.py`; per-scene state registration and cleanup live in `state.py`; side-effecting actions such as text submission, microphone capture, diagnostics, and conversation management live in `operators.py`; add-on-level settings such as API key, model selection, audio device handling, and diagnostics UI live in `preferences.py`; and shared helpers for HTTP requests, Info-history capture, local storage, audio-device enumeration, and UI text cleanup live in `common.py`. This modular split made it easier to trace failures to either presentation logic, state wiring, or external-process/network behavior.
 
 Core interaction paths were implemented as operators:
 
@@ -87,9 +87,33 @@ In the implemented pipeline, the assistant does not introspect the full scene gr
 
 ## Blender integration details
 
+### Add-on entry point and module boundaries
+
+Suzanne is packaged as a conventional Blender add-on rather than as a standalone Python application. At load time, the add-on registers a preferences class, multiple operator classes, and a single sidebar panel class, then creates its runtime `Scene` properties and ensures that the recordings directory exists. This startup sequence matters methodologically because it determines which features are available immediately after enablement and which state fields Blender persists for the session. In concrete terms, the entry point first registers the preferences UI, then the interaction and diagnostic operators, and finally the `VIEW_3D` sidebar panel that exposes Suzanne inside Blender's right-hand N-panel. Unregistration reverses that order and explicitly removes the `Scene` properties before class teardown so repeated enable/disable cycles do not leave stale state attached to Blender's runtime.
+
+The module boundaries were chosen to mirror the system responsibilities described earlier in the chapter:
+
+- `__init__.py`: metadata, Blender compatibility declaration, and class registration order.
+- `panel.py`: N-panel layout, status rendering, collapsible-card drawing, conversation previews, and latest-output preview behavior.
+- `state.py`: creation and cleanup of all `Scene` properties used to drive runtime state and UI visibility.
+- `operators.py`: text-send flow, voice-recording flow, diagnostics utilities, and conversation create/rename/delete actions.
+- `preferences.py`: API key entry, model and device selection, storage options, and diagnostics display.
+- `common.py`: shared helper functions for prompt construction, Info-history extraction, local conversation storage, audio tooling, and API transport.
+
+Because these responsibilities are separated in code, later verification work could test panel behavior, state registration, and operator execution as distinct concerns rather than as one monolithic interaction.
+
 ### Registration and state model
 
-Suzanne follows Blender add-on conventions for class registration and property initialization [@blender-manual]. Runtime interaction data is maintained in `Scene` properties, including:
+Suzanne follows Blender add-on conventions for class registration and property initialization [@blender-manual]. During registration, the add-on registers all Blender-visible classes, calls `ensure_props()` to attach runtime properties to `bpy.types.Scene`, and attempts to create a local recordings directory. During unregistration, those properties are explicitly removed with `clear_props()` before classes are unregistered. This ordering was chosen to avoid stale UI state and to make repeated enable/disable cycles predictable during testing.
+
+Runtime interaction data is maintained in `Scene` properties rather than in `WindowManager` properties because scene-bound state proved more reliable and naturally scoped the assistant's state to the active `.blend` file. In implementation terms, the registered fields fall into four groups:
+
+- **Interaction state:** microphone-active flag, status string, last audio path, last transcript, last response, and current prompt text.
+- **Context and conversation state:** active conversation selection, whether conversation context is enabled, how many turns are attached, whether Blender Info history is attached, and the most recent captured Info-history block.
+- **Section-visibility state:** booleans controlling whether the `Ask`, `Context`, `Conversation`, `Voice`, and `Latest Output` cards are expanded or collapsed.
+- **Output-presentation state:** selected output view (`response` vs. `transcript`) and the expand/collapse toggles for long transcript and response text.
+
+The runtime interaction fields include:
 
 - Current status string.
 - Current message prompt.
@@ -99,11 +123,26 @@ Suzanne follows Blender add-on conventions for class registration and property i
 - Info-history attachment toggle and the last captured Info-history block.
 - Latest-output view and transcript/response expansion state.
 
-Configuration values (API key, response/transcription model selections, file prefix, conversation auto-save behavior, and diagnostics feedback) are stored in add-on preferences. This separation was chosen so task state and configuration state remain distinct and easier to reason about during testing.
+Configuration values (API key, response/transcription model selections, audio-device handling, file prefix, conversation auto-save behavior, and diagnostics feedback) are stored in add-on preferences. This separation was chosen so task state and configuration state remain distinct and easier to reason about during testing: scene properties describe what the current interaction is doing, while preferences describe how the add-on is configured in general.
+
+For reproducibility, it is also useful to state the storage logic explicitly. Recordings are written first to an add-on `recordings/` directory, and if that location is unavailable the method falls back to a temporary directory so microphone trials still complete. Conversation history is stored separately in a JSON file (`suzanne_conversations.json`) inside an add-on `data/` directory, again with a temporary-directory fallback when necessary. This means a reproduction attempt can verify not only the visible panel behavior, but also whether the expected local artifacts were created after text and voice runs.
 
 ### Panel design and interaction constraints
 
 The panel is now structured around a set of Blender-native collapsible cards: `Status`, `Ask`, `Voice`, `Context`, `Conversation`, and `Latest Output`. This layout keeps the primary interaction loop visible while allowing supporting controls to remain compact until needed.
+
+In implementation terms, each card is built with Blender's `layout.panel_prop(...)` mechanism and is bound to a corresponding `Scene` boolean property. The implemented properties are `suzanne_va_show_message`, `suzanne_va_show_context`, `suzanne_va_show_conversation`, `suzanne_va_show_recording`, and `suzanne_va_show_output`. This means the expanded/collapsed state of a card is itself part of the assistant's stored runtime state rather than an untracked UI detail. The design was intentional: a beginner who opens the `Context` or `Conversation` card for one task should be able to continue that task without re-opening controls every redraw.
+
+Each card has a narrow functional role:
+
+- The `Status` card maps raw status strings such as `Idle`, `Recording...`, `Sending...`, `Idle (sent)`, and `Idle (error)` to user-facing labels, icons, and alert styling.
+- The `Ask` card presents the text prompt field and the send operator, and shows a disabled hint when the prompt box is empty.
+- The `Voice` card exposes a single microphone button that toggles between starting and stopping recording.
+- The `Context` card exposes the toggles for attaching recent conversation turns and Blender Info history.
+- The `Conversation` card provides an enum selector plus create, rename, and delete operators, along with a short preview of recent saved exchanges.
+- The `Latest Output` card can switch between response and transcript views and truncates long text unless the user expands it.
+
+The `Latest Output` card is especially important for reproducibility because it makes the post-request state inspectable. Rather than replacing one output with another, the panel stores both the last transcript and the last response and lets the user choose which view to inspect. Separate expand/collapse toggles are maintained for each view so long outputs can be previewed briefly during normal use and then expanded during debugging or evaluation write-up. This small implementation detail matters because it preserves evidence of what the transcription model heard and what the response model produced without forcing the user to leave Blender to inspect logs.
 
 The interaction loop is:
 
@@ -113,17 +152,17 @@ The interaction loop is:
 4. Read the latest transcript or step-oriented response.
 5. Apply steps manually in the scene.
 
-A single microphone button toggles recording on/off to reduce control-surface complexity for beginners. The status card updates on each transition, functioning as lightweight feedback for asynchronous operations (recording, network request, response rendering). Empty states in the `Conversation` and `Latest Output` cards make it clear when no history or response is available yet, and long transcripts or responses can be expanded in place when necessary.
+A single microphone button toggles recording on/off to reduce control-surface complexity for beginners. The status card updates on each transition, functioning as lightweight feedback for asynchronous operations (recording, network request, response rendering). Empty states in the `Conversation` and `Latest Output` cards make it clear when no history or response is available yet, and long transcripts or responses can be expanded in place when necessary. The overall goal of this structure is not visual novelty; it is to keep prompt entry, context control, and response review spatially coupled so that learners do not need to leave the viewport to manage the assistant itself.
 
 ### Cross-platform audio capture strategy
 
 Because Blender is cross-platform and student devices vary, audio capture was implemented with OS-specific command paths:
 
-- Linux: `ffmpeg` with ALSA input.
-- Windows: `ffmpeg` with DirectShow input.
+- Linux: `ffmpeg` with ALSA input, with PulseAudio candidates available as fallback.
+- Windows: `ffmpeg` with WASAPI and DirectShow candidate paths.
 - macOS: bundled `atunc` utility for capture.
 
-Recorded files are normalized to mono 16 kHz WAV for consistent transcription behavior. If the add-on directory cannot store recordings, the system falls back to a temporary directory. This avoids hard failures in locked-down lab environments.
+Recorded files are normalized to mono 16 kHz WAV for consistent transcription behavior. Candidate recorders are tried in sequence until one remains alive, which makes the voice method more portable across personal laptops, lab machines, and OS-specific microphone stacks. If the add-on directory cannot store recordings, the system falls back to a temporary directory. This avoids hard failures in locked-down lab environments.
 
 ## End-to-end interaction workflows
 
@@ -154,6 +193,10 @@ Output: formatted procedural response in N-panel
 
 This workflow is intentionally explicit and synchronous from the user's perspective. There are no hidden retries or silent fallbacks that could obscure what happened during a request.
 
+In the actual implementation, this flow is handled by the `SUZANNEVA_OT_send_message` operator. The operator trims and validates the prompt, checks that an API key is present in add-on preferences, optionally captures the last 100 lines of Blender Info history, optionally appends recent conversation turns from the selected local conversation, builds a markdown-structured request block, and prepends a Blender-only domain constraint before sending the payload to the response endpoint. If the primary `output_text` field is absent, the code falls back through nested message content to reconstruct the response text. The operator then stores the prompt and response in `Scene` properties, resets the transcript/response expansion booleans, appends the exchange to local conversation storage, updates the status string, and triggers UI redraw.
+
+This operator-level description matters because it reveals the implementation language of the method. The workflow is not handled by hidden JavaScript, web middleware, or a separate desktop service; it is implemented directly in Python as a Blender operator that can be inspected, invoked, and tested through Blender's own event model. Another developer reproducing the tool would therefore need to reproduce not only the prompt design but also the operator lifecycle, `Scene` property updates, and redraw logic that make the response visible inside the viewport.
+
 ### Voice workflow
 
 The voice path extends the text workflow by inserting capture and transcription stages.
@@ -176,6 +219,10 @@ Output: transcript + procedural response in N-panel
 ```
 
 This two-press model was selected over push-to-talk hold behavior because it lowers motor-demand complexity for novices and allows longer utterances without continuous key holding.
+
+In code, the voice path is implemented by the `SUZANNEVA_OT_microphone_press` operator, which uses a single-toggle model: the first press starts capture and the second press stops it and sends the result. The recording stage selects an operating-system-specific backend: `ffmpeg` with ALSA or PulseAudio candidates on Linux, `ffmpeg` with WASAPI or DirectShow candidates on Windows, and a bundled `atunc` utility on macOS. Candidate recorders are tried in sequence until one remains alive, which makes the method more reproducible across different lab and personal-machine setups. Audio is written as mono 16 kHz WAV; if the add-on directory is not writable, the recording path falls back to a temporary directory. After the second press, the operator terminates the recorder process, waits for the file to appear, submits it to the transcription endpoint, reuses the same conversation/context attachment logic as the text path, and then sends the transcript to the response endpoint. The operator writes the resulting transcript, response, and file path back into `Scene` properties and updates the panel state so the `Latest Output` card can render the result immediately.
+
+This operator also clarifies an implementation choice the professor's comment points toward: the collapsible cards and algorithms are connected through explicit state transitions rather than through a background service. The `Status` card is updated as the operator moves from `Recording...` to `Stopping...` to `Sending...` and finally to `Idle (sent)` or `Idle (error)`. Because those statuses are ordinary `Scene` properties, the same UI elements that support normal use also expose the control flow needed to debug a failed reproduction attempt.
 
 ## Network and model interaction layer
 
@@ -271,23 +318,32 @@ UI output is cleaned and line-wrapped for readability, and markdown-heavy format
 
 ### Software stack
 
-The prototype runs as a Blender add-on for Blender 5.0.0+ [@blender-manual], using Python within Blender's runtime and standard libraries for process and HTTP orchestration. External tooling dependencies are intentionally minimal:
+The prototype runs as a Blender add-on for Blender 5.0.0+ [@blender-manual], using Python within Blender's runtime and Blender's `bpy` API for registration, layout, operators, and persistent properties. Standard Python libraries handle process management, filesystem interaction, JSON storage, and HTTP orchestration. The evaluated implementation consists of one sidebar panel, multiple Blender operators, one add-on preferences class, and a set of helper utilities for prompt formatting, local storage, and API transport. External tooling dependencies are intentionally minimal:
 
 - `ffmpeg` (Linux/Windows) for microphone capture.
 - bundled `atunc` utility (macOS) for microphone capture.
 - Network access to model APIs for transcription and response generation.
 
+Within Blender, the preferences surface stores or selects the following configuration values: API key, response model, transcription model, system-default audio input device, recording filename prefix, conversation auto-save behavior, and diagnostics messages. Local persistent data is split across two locations: recordings are written to an add-on `recordings/` directory when possible, while conversation history is written to a local `suzanne_conversations.json` store in an add-on `data/` directory with a temporary-directory fallback when needed.
+
+Reproducing the tool therefore requires more than matching model endpoints. A faithful rebuild would need: (a) the Blender add-on packaging structure, (b) Python classes for preferences, operators, and panel drawing, (c) `Scene` properties for status, prompt, transcript, response, context toggles, and card visibility, and (d) local storage paths for recordings and conversation JSON. These elements together are what make Suzanne an in-viewport assistant rather than a generic external chatbot.
+
 ### Reproducibility protocol
 
 To support repeatable demonstrations and evaluation setup, the following run protocol was used:
 
-1. Install/enable add-on in Blender.
-2. Configure API key and response/transcription model settings in preferences.
-3. Run built-in diagnostics such as `Test API Key`, `Test Microphone`, and `Test Transcription` as needed.
-4. Set context options (`Use Conversation Context`, `Context Turns`, `Include Info History (100 lines)`) for the trial.
-5. Run fixed benchmark prompts/tasks and record completion observations.
+1. Install Blender 5.0.0 or newer and enable the Suzanne add-on through Blender's add-on manager.
+2. Confirm that the add-on appears in the `3D Viewport > N-panel > Suzanne` location and that registration created the expected sidebar controls.
+3. Open add-on preferences and configure the API key, response model, transcription model, filename prefix, and conversation auto-save setting.
+4. Run the built-in diagnostics (`Test API Key`, `Test Microphone`, and `Test Transcription`) before task execution so setup errors are separated from task-performance observations.
+5. Verify that the local storage paths are working by confirming that the recordings folder can be opened from preferences and that local conversation storage is available.
+6. Choose whether to run a text trial, a voice trial, or both. For text trials, type the benchmark prompt in the `Ask` card and submit it. For voice trials, press the microphone button once to begin recording and once again to stop and submit.
+7. Set context options for the run: whether local conversation context is enabled, how many context turns are attached, and whether the last 100 lines of Blender Info history are included.
+8. After a request completes, inspect the `Latest Output` card in both `response` and `transcript` modes, verify that the status string reached a successful idle state, and confirm that any expected local artifacts (WAV file or JSON conversation entry) were created.
+9. Record environment metadata for each run, including Blender version, operating system, response model, transcription model, whether Info history was enabled, whether conversation context was enabled, whether normal or fallback storage paths were used, and which path (text or voice) was used.
+10. After each task, inspect the latest transcript/response, local conversation history, and any diagnostics output to document whether the pipeline behaved as expected.
 
-Because Blender versions and OS audio stacks vary, environment metadata (OS, Blender version, selected models, and whether conversation or Info-history context was enabled) is logged as part of experiment setup documentation.
+Because Blender versions and OS audio stacks vary, environment metadata (OS, Blender version, selected models, whether conversation or Info-history context was enabled, and whether local storage used normal or fallback directories) is logged as part of experiment setup documentation. A reproduction attempt that omits this metadata would make it difficult to determine whether a difference in behavior came from the add-on itself or from the surrounding machine and Blender environment.
 
 ### Versioned capability statement
 
