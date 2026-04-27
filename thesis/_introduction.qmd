@@ -8,7 +8,7 @@ However, Blender’s strength comes with a cost: a steep learning curve. Prior a
 
 This project introduces **Suzanne**, a Blender add-on that lives in the right-hand **N-panel** and provides short, numbered, in-viewport steps for common tasks. Instead of searching externally for guidance while working, users receive instructions directly beside the 3D Viewport. The goal is to reduce context switching, help users execute reliably, and increase the number of polished artifacts that students and independent artists can publish.
 
-![Blender interface with key areas visible: 3D Viewport (center), Outliner (right), Properties (bottom-right), and the N-panel (right sidebar).](images/blender_ui.png){fig-cap="Figure 1. The Blender interface. Beginners juggle regions, modes, operators, and modifier order. Screenshot by the author." width=100%}
+![Blender interface with key areas visible: 3D Viewport (center), Outliner (right), Properties (bottom-right), and the N-panel (right sidebar).](images/blender_ui.png){fig-cap="The Blender interface. Beginners juggle regions, modes, operators, and modifier order. Screenshot by the author." width=100%}
 
 ## Key terms and concepts
 
@@ -22,7 +22,7 @@ This project introduces **Suzanne**, a Blender add-on that lives in the right-ha
 
 - **Grounding.** Retrieval-Augmented Generation (RAG) combines large language models with authoritative sources. Integrating RAG ensures instructional steps match Blender’s official terminology and correct behavior [@gao2023retrieval].
 
-![Suzanne add-on in Blender’s N-panel, showing the current interface with status, text prompt, voice input, context controls, conversation tools, and latest output sections beside the 3D Viewport.](images/suzanne_n_panel_idle.png){fig-cap="Figure 2. The Suzanne assistant in the N-panel. The interface keeps prompt entry, voice controls, context options, and response output directly inside Blender's workspace. Screenshot by the author." width=100%}
+![Suzanne add-on in Blender’s N-panel, showing the current interface with status, text prompt, voice input, context controls, conversation tools, and latest output sections beside the 3D Viewport.](images/suzanne_n_panel_idle.png){fig-cap="The Suzanne assistant in the N-panel. The interface keeps prompt entry, voice controls, context options, and response output directly inside Blender's workspace. Screenshot by the author." width=100%}
 
 
 ## Motivation
@@ -44,6 +44,12 @@ Students typically post these artifacts to ArtStation, Behance, GitHub Pages, or
 Suzanne aims to address this gap: **deliver high-clarity, minimal-step instructions inside Blender**, grounded on authoritative documentation and consistent terminology.
 
 This approach is supported by educational research showing that AI-based learning tools improve cognitive outcomes when instructional content is concise, context-specific, and directly actionable [@luo2025ailearningtools]. Suzanne follows these principles by placing guidance beside the active viewport and presenting it as small, verifiable steps that can be performed immediately.
+
+Educational research offers a stronger rationale for this design than convenience alone. Worked-example studies argue that novice learners often benefit when instruction presents integrated, stepwise solutions instead of leaving them to infer hidden transitions between sparse hints [@Atkinson_2000]. Effective worked examples segment the task, keep relevant information close together, and reduce unnecessary search so learners can devote more attention to understanding the procedure itself [@Atkinson_2000]. In a Blender context, this matters because beginners are frequently not blocked by high-level artistic intention, but by small operational gaps: they know they need a modifier, a light, or a simulation domain, yet do not know the exact sequence of actions required to produce it.
+
+Research on tutoring systems points in the same direction. VanLehn's review of human tutoring and intelligent tutoring systems suggests that step-based tutoring can approach the effectiveness of human tutoring more closely than answer-only instructional systems because it responds at the granularity where novices actually make mistakes [@VanLEHN_2011]. Suzanne adopts this principle by treating procedural micro-steps as its primary output. Rather than merely stating what the final scene should look like, the assistant is designed to specify the relevant mode, identify the correct operator or panel path, and enumerate the ordered actions needed to move from the current task state toward the desired result.
+
+There is also a workflow argument for embedding this help inside Blender instead of leaving it in a browser tab. Studies of knowledge work show that people frequently shift between tasks and "working spheres," often every few minutes, and that interruptions may preserve speed only by increasing stress, frustration, and time pressure [@Gonz_lez_2004; @Mark_2008]. Blender learning is not identical to office work, but it shares the same reorientation burden: pause the artistic task, search for guidance elsewhere, translate the explanation back into the current interface state, and then recover momentum. Suzanne is therefore motivated not just by the desire to answer questions, but by the desire to reduce the interruption tax attached to routine learning.
 
 ## Problem statement
 
@@ -80,6 +86,12 @@ Because Suzanne is now implemented as a working Blender add-on, this thesis deli
 5. **Deliver reliable, beginner-readable feedback.** Surface clear status messages, validation errors, and recoverable failure states so the tool itself does not add more confusion to an already difficult learning environment.
 
 6. **Focus on portfolio-relevant workflows and evaluate the result.** Prioritize guidance for modeling, lighting, rendering, and troubleshooting tasks that matter to student portfolios, and assess the finished prototype through software verification and task-based Blender experiments focused on reliability, instructional clarity, and workflow support.
+
+## Public-facing dissemination
+
+By spring 2026, Suzanne existed not only as a thesis artifact, but also as a publicly packaged prototype. I published a demonstration video, *ChatGPT Inside Blender? Meet Suzanne AI - Free Blender Addon*, on YouTube [@duverglas2026youtube] and deployed a beta distribution page, *Suzanne AI Voice Assistant for Blender*, on Gumroad [@duverglas2026gumroad]. These dissemination artifacts required the project to be explained in user-facing terms rather than only in research language: what the add-on does, which workflows it supports, what Blender version it targets, which dependencies it requires, and what limitations remain in the current beta release.
+
+The Gumroad deployment is especially relevant because it frames Suzanne as something a real Blender learner could install and try rather than merely a conceptual design or a local classroom prototype [@duverglas2026gumroad]. The product page documents typed prompts, voice input, conversation memory, Blender-focused guidance, and platform-specific requirements such as Blender version support and `ffmpeg` availability on Linux [@duverglas2026gumroad]. Likewise, the YouTube video functions as a public demonstration of the add-on's intended workflow and communicates Suzanne's identity as a teaching-oriented assistant rather than an automation-first copilot [@duverglas2026youtube]. These public artifacts do not replace controlled evaluation, but they do show that the project advanced to a stage of packaging, explanation, and distribution consistent with real-world use.
 
 ## Assumptions, limitations, and delimitations
 

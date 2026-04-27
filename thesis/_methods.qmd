@@ -24,6 +24,8 @@ That design specification emphasized:
 - Safety: no silent scene modifications and no hidden execution of generated code.
 - Practical deployment: installation and operation should fit student hardware and software constraints.
 
+Although compact, this specification was not ad hoc. It was shaped by several repeated findings across the literature. Worked-example research suggests that novices benefit when instruction segments procedure into explicit steps and keeps actionable information close to the task at hand [@Atkinson_2000]. VanLehn's review of tutoring systems further indicates that step-based assistance is especially useful when feedback is aligned to the learner's immediate action rather than deferred until the end of a task [@VanLEHN_2011]. Interruption research suggests that moving away from a task to gather help imposes an additional reorientation cost, even when the information eventually found is useful [@Gonz_lez_2004; @Mark_2008]. Human-AI interaction scholarship adds that assistance should preserve agency, expose failure, and remain inspectable and correctable [@Horvitz_1999; @Amershi_2019; @Shneiderman_2020]. In Suzanne, these findings were translated into specific implementation constraints: visible state transitions, concise procedural output, opt-in action, and location inside the active workspace.
+
 ### Phase 2: Prototype architecture and implementation
 
 The first implementation target was a Blender add-on written in Python against Blender's `bpy` API and loaded through the standard add-on registration system (`register()` / `unregister()`). In the implemented add-on, `register()` registers the preferences class, interaction operators, diagnostic operators, and sidebar panel, then calls `ensure_props()` to attach runtime fields to `bpy.types.Scene` and creates the local recordings directory. `unregister()` removes those `Scene` properties with `clear_props()` and unregisters the same classes in reverse order so Blender does not retain stale UI state between enable/disable cycles.
@@ -73,6 +75,27 @@ Table: Requirement-to-implementation traceability for Suzanne
 
 This traceability table shaped coding priorities and chapter-level evaluation planning.
 
+## Pedagogical and interaction-design principles
+
+Suzanne was not designed only as a software pipeline. It was also designed as an instructional and interaction artifact. The literature reviewed earlier can therefore be restated here as a compact set of operational design principles.
+
+Table: Literature-informed design principles used in Suzanne
+
+| Principle | Literature basis | Implementation consequence |
+|:--|:--|:--|
+| Stepwise scaffolding | Worked-example and tutoring-system research [@Atkinson_2000; @VanLEHN_2011] | Prefer ordered procedures over abstract summaries |
+| Workspace locality | In-context help and interruption research [@8506568; @Gonz_lez_2004; @Mark_2008] | Deliver help inside Blender's N-panel |
+| Mixed-initiative control | Mixed-initiative and HCAI research [@Horvitz_1999; @Shneiderman_2020] | Keep the user as the final actor and decision maker |
+| Visible system behavior | Human-AI guidelines and explanatory debugging [@Amershi_2019; @Kulesza_2015] | Surface status, errors, and inspectable outputs |
+| Learner-readable scope | AI literacy and educational-chatbot literature [@Long_2020; @Kuhail_2022; @Labadze_2023] | Make capability limits and workflow assumptions explicit |
+| Responsible deployment | AI ethics and privacy/security literature [@daspaper2025llmsecurity] | Minimize telemetry, constrain code, and warn about risk |
+
+These principles affected both wording and mechanics. "Stepwise scaffolding," for example, is implemented not only by asking the model for numbered responses, but also by cleaning and wrapping output so that each step remains readable in a narrow sidebar. "Workspace locality" is not just the choice of a Blender panel over a website; it also motivates storing status, transcript, and response state locally so that the interaction can be reviewed without leaving the viewport. Likewise, "mixed-initiative control" shaped the decision to separate advice from execution authority. Suzanne may generate a procedure or a script, but it does not silently act on the scene.
+
+The AI literacy principle is especially important because the system is intended for beginners. Long and Magerko emphasize that effective interaction with AI requires realistic understanding of what the system can and cannot do [@Long_2020]. In practice, this means Suzanne's interface needs to teach two things at once: a Blender workflow and an appropriate mental model of AI-supported help. The add-on therefore uses concrete status language, explicit prerequisites, and visible failures so the user is less likely to mistake silence or hallucination for competence.
+
+Finally, the educational-chatbot literature helped define what Suzanne should *not* try to be. Reviews by Kuhail et al. and Labadze et al. show that chatbot systems in education vary widely in role, design quality, and evidence quality [@Kuhail_2022; @Labadze_2023]. Suzanne was therefore intentionally constrained to a narrow role: a Blender-specific, step-oriented assistant for portfolio-relevant tasks. This narrower scope makes both implementation and evaluation more defensible because the system's claims can be judged against a bounded set of behaviors.
+
 ## System architecture
 
 Suzanne is implemented as a Blender-resident, event-driven assistant with three layers:
@@ -83,7 +106,7 @@ Suzanne is implemented as a Blender-resident, event-driven assistant with three 
 
 The architecture is intentionally simple because reliability and transparency were prioritized over autonomous behavior. Instead of hidden background orchestration, each major transition is user-triggered and surfaced in the UI.
 
-![Current Suzanne interface in Blender's N-panel, showing the status card, text prompt area, voice control, context settings, conversation controls, and latest-output preview in the same workspace as the active scene.](images/suzanne_n_panel_latest.png){fig-cap="Figure 3. Current in-viewport deployment of Suzanne in the right-hand N-panel. The interface keeps prompt entry, voice capture, context controls, conversation memory, and output review spatially coupled to Blender's workspace. Screenshot by the author." width=100%}
+![Current Suzanne interface in Blender's N-panel, showing the status card, text prompt area, voice control, context settings, conversation controls, and latest-output preview in the same workspace as the active scene.](images/suzanne_n_panel_latest.png){fig-cap="Current in-viewport deployment of Suzanne in the right-hand N-panel. The interface keeps prompt entry, voice capture, context controls, conversation memory, and output review spatially coupled to Blender's workspace. Screenshot by the author." width=100%}
 
 In the implemented pipeline, the assistant does not introspect the full scene graph automatically. Scene awareness is inferred primarily from user prompts plus optional attached context: recent local conversation turns and the last 100 lines of Blender's Info history. This keeps integration lightweight while still allowing limited context-sensitive assistance, though it constrains precision for unusual scenes or workflows not visible in the recent interaction history.
 
@@ -258,6 +281,16 @@ A major methodological goal is grounding outputs in authoritative Blender langua
 
 The current evaluated build implements layers (1) and (2) directly and is architected to accept layer (3) as a modular extension. This allows transparent reporting of what is already operational versus what is specified for the full thesis target.
 
+### Prompt contract and instructional shaping
+
+Within the current implementation, prompt construction does more than relay raw user text to a model. It functions as a lightweight instructional contract. The domain constraint layer narrows the problem space to Blender-related help, reducing off-topic drift. The terminology layer nudges the model toward the language of modes, operators, panel paths, prerequisites, and ordered actions. Together, these layers attempt to transform a general-purpose conversational model into a more disciplined Blender tutor.
+
+This design choice is rooted in the worked-example and tutoring literature. Atkinson et al. argue that examples are more effective when they foreground sequence and structural relationships rather than leaving the learner to reconstruct those relationships independently [@Atkinson_2000]. VanLehn similarly emphasizes the value of help aligned to immediate steps in problem solving [@VanLEHN_2011]. Suzanne's prompt shaping therefore encourages answers that resemble short procedural examples rather than broad essays. The assistant is asked, in effect, to behave less like a general explainer and more like a compact task coach.
+
+Human-AI interaction research provides a second reason for this contract. Amershi et al. recommend making system behavior legible and supporting user correction [@Amershi_2019]. A response that names a mode, identifies a menu path, and lists an ordered set of actions is easier for a user to verify and reject than a response that stays abstract. Procedural explicitness is therefore not merely about pedagogy; it is also about auditability. A learner can check whether "Object Mode > Add > Light > Area" exists in Blender more easily than they can validate a vague instruction such as "set up your light in the normal way."
+
+This contract also supports later evaluation. If Suzanne is consistently shaped toward ordered, mode-aware, operator-named output, then experiments can judge whether it actually delivers on that format. The model may still fail, but its failures occur against a more explicit target structure.
+
 For the retrieval extension, passage ranking follows standard vector-similarity scoring [@gao2023retrieval]:
 
 $$
@@ -348,6 +381,24 @@ To support repeatable demonstrations and evaluation setup, the following run pro
 10. After each task, inspect the latest transcript/response, local conversation history, and any diagnostics output to document whether the pipeline behaved as expected.
 
 Because Blender versions and OS audio stacks vary, environment metadata (OS, Blender version, selected models, whether conversation or Info-history context was enabled, and whether local storage used normal or fallback directories) is logged as part of experiment setup documentation. A reproduction attempt that omits this metadata would make it difficult to determine whether a difference in behavior came from the add-on itself or from the surrounding machine and Blender environment.
+
+### Public packaging and dissemination
+
+As the artifact matured, reproducibility became a public-facing concern rather than only an internal one. Suzanne was packaged for external viewing and distribution through two dissemination channels: a YouTube demonstration video and a Gumroad beta deployment page [@duverglas2026youtube; @duverglas2026gumroad]. These channels are not formal evaluation instruments, but they are methodologically relevant because they force the project to declare practical assumptions that can remain implicit in a private prototype.
+
+The Gumroad page, for instance, had to state supported features, required Blender version, API key expectations, internet dependency, and platform-specific installation caveats such as `ffmpeg` on Linux [@duverglas2026gumroad]. The YouTube video had to present a coherent narrative of Suzanne's intended workflow and show how a novice-facing user might understand the tool on first exposure [@duverglas2026youtube]. In effect, public packaging acted as a secondary design check: if the system could not be described clearly to an outside user, then its instructional framing was probably still too vague.
+
+This public dissemination does not demonstrate learning effectiveness on its own, and it should not be confused with a human-subject study or adoption metric. What it does demonstrate is that the project reached a level of documentation, packaging, and disclosure consistent with authentic trial use. That maturity is relevant to thesis evaluation because it shows Suzanne functioning not only as source code, but as a communicable artifact with explicit user-facing assumptions.
+
+### Onboarding and documentation as part of the method
+
+For a beginner-oriented assistant, onboarding is not a peripheral concern. It is part of the system's instructional method. If a user cannot determine which Blender version is supported, whether an API key is needed, how to test audio input, or what to do when the network fails, then the instructional value of the in-viewport assistant is undermined before the first real task begins. This is why Suzanne's preferences panel includes key testing, microphone diagnostics, transcription diagnostics, and access to local storage locations. These controls are not merely maintenance conveniences; they reduce ambiguity at the boundary between installation and use.
+
+Human-AI interaction research helps explain why these onboarding choices matter. Amershi et al. recommend that AI systems communicate capability, limitations, and failure clearly rather than leaving users to infer them indirectly [@Amershi_2019]. AI-literacy research likewise argues that users need enough understanding of system scope and dependencies to interact with AI tools responsibly [@Long_2020]. In Suzanne, this translated into documentation and interface elements that explicitly state what is required for normal operation: Blender 5.0 or newer, an OpenAI API key, internet access for API features, and platform-specific audio capture dependencies where relevant [@duverglas2026gumroad].
+
+The documentation burden also affected how beta limitations were framed. The Gumroad deployment describes Suzanne as an early beta and notes that text chat and conversation tools are functional while voice features may vary by operating system, microphone setup, and permissions [@duverglas2026gumroad]. This wording matters methodologically because it resists overclaiming. A public distribution page that promised a seamless universal experience would be rhetorically stronger in the short term, but it would be less faithful to the actual state of the artifact. Explicit beta framing is therefore a form of research integrity as well as user support.
+
+From a thesis perspective, this onboarding work also reinforces the distinction between a concept and an artifact. A conceptual assistant can ignore installation friction, prerequisites, and diagnostics. A real assistant cannot. By requiring Suzanne to survive packaging, documentation, and first-use explanation, public dissemination added another layer of implementation scrutiny: the system had to be understandable not only to its developer, but to outside users encountering it for the first time.
 
 ### Versioned capability statement
 
