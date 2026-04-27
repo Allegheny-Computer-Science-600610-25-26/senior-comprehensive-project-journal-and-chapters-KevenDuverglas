@@ -1,6 +1,6 @@
 # Experiments
 
-This chapter evaluates Suzanne at two levels. First, it reports a completed software-verification pass over the Blender add-on implementation. Second, it presents three task-based experiments that demonstrate how Suzanne supports representative portfolio-oriented Blender workflows inside the viewport. This structure keeps the claims matched to the evidence: the automated suite evaluates deterministic software behavior, while the task experiments evaluate whether Suzanne can deliver usable instructional support for simple, complex, and context-aware workflows.
+This chapter evaluates Suzanne at two levels. First, it reports a completed software-verification pass over the Blender add-on implementation. Second, it presents four task-based experiments that demonstrate how Suzanne supports representative portfolio-oriented Blender workflows inside the viewport. This structure keeps the claims matched to the evidence: the automated suite evaluates deterministic software behavior, while the task experiments evaluate whether Suzanne can deliver usable instructional support for simple, complex, context-aware, and corrective workflows.
 
 ## Experimental Design
 
@@ -23,7 +23,7 @@ Table: Evaluation layers used in this chapter
 | Evaluation layer | Purpose | Evidence presented here |
 |:--|:--|:--|
 | Software verification | Confirm deterministic behavior of operators, panel rendering, preferences, and state transitions | Automated Python test suite with `65` passing checks |
-| Task-based evaluation | Demonstrate usable in-viewport guidance across representative Blender workflows | Three authored experiments covering basic question answering, complex procedure generation, and context-aware action reconstruction |
+| Task-based evaluation | Demonstrate usable in-viewport guidance across representative Blender workflows | Four authored experiments covering basic question answering, complex procedure generation, context-aware action reconstruction, and corrective error recovery |
 
 This design fits the realities of Blender add-on development. Some claims are best tested through automation, such as whether blank prompts are rejected or whether an error state is rendered correctly. Other claims are best illustrated through concrete task runs in the Blender interface, where Suzanne's generated guidance can be inspected directly as numbered in-panel instructions, longer procedural responses, or context-aware summaries of recent user actions. In this chapter, that evidence is presented through captured N-panel outputs and experiment summaries that pair each prompt with the returned guidance and the observed outcome.
 
@@ -122,7 +122,7 @@ When the local test suite was executed, all `65` checks passed in `0.30` seconds
 
 ### Task-based evaluation
 
-The three task-based experiments below move from a simple instructional query to a longer procedural workflow and then to a context-aware reconstruction task. Together, they show how Suzanne behaves when used as an in-viewport guide for increasingly demanding kinds of support.
+The four task-based experiments below move from a simple instructional query to a longer procedural workflow, then to a context-aware reconstruction task, and finally to a corrective troubleshooting exchange after a user mistake. Together, they show how Suzanne behaves when used as an in-viewport guide for increasingly demanding kinds of support.
 
 #### Experiment 1: Basic question answering in the Blender viewport
 
@@ -204,17 +204,45 @@ Table: Summary of Experiment 3
 | Outcome | Successful as a context-aware assistance test |
 | Interpretation | Suzanne used recent session context to generate a grounded, workflow-specific explanation rather than only generic Blender advice |
 
-Together, the three experiments illustrate a clear progression of capability: basic question answering, longer procedural guidance for a complex task, and context-aware interpretation of recent user actions. That progression supports the thesis claim that Suzanne is not merely a generic chatbot embedded in Blender, but a more situated instructional assistant designed to reduce micro-execution friction inside the viewport.
-
 Experiment 3 scores differently from the first two because its value lies less in procedural instruction and more in situated interpretation. The main success condition is context sensitivity: did Suzanne actually use the attached Blender history to reconstruct recent actions rather than falling back to generic language? The captured output suggests that it did. The assistant names concrete operations in sequence and offers a plausible higher-level explanation of the task being attempted. That is precisely the behavior the context features were meant to enable.
 
 At the same time, this experiment exposes a distinct risk: interpretation can drift beyond observation. Suzanne does not merely repeat the action log; it infers likely intent. That inference is useful, but it is also less certain than simply listing an operator path. The experiment therefore illustrates a different trade-off from Experiment 2. There, the challenge was balancing completeness against panel space. Here, the challenge is balancing grounded description against over-interpretation. Because the inferred purpose remained plausible and clearly tied to visible actions, the run still counts as successful, but it also highlights why context-aware assistance should remain advisory rather than authoritative.
 
 This context behavior is significant for the broader thesis because it addresses one of the strongest limitations of traditional tutorials: they rarely know what the learner just did. In practice, a browser tutorial or static manual page can explain *a* workflow, but it cannot usually summarize *your* recent workflow. Suzanne's context-aware path is therefore not just an interface novelty. It is a capability difference that makes in-viewport assistance meaningfully more situated.
 
+#### Experiment 4: Corrective guidance after a user mistake
+
+The fourth task-based experiment evaluates whether Suzanne can support error recovery after a user follows a workflow incorrectly. This matters because many novice Blender problems are not failures to ask a first question, but failures to recover after applying the right idea to the wrong object, panel, or mode. In this trial, the user first asked Suzanne, "I already added a light to my scene and selected it. How do I change the light's color to blue in Blender 5.0?" Suzanne responded with a short step-by-step procedure that directed the user to select the light, open the Properties editor, click the light-bulb tab, and change the `Color` field.
+
+![Experiment 4 screenshot showing Suzanne's initial answer for changing a Blender light to blue.](images/experiment4_light_color_response_1.png){fig-cap="Experiment 4, part 1: Suzanne provides the initial light-color workflow in Blender's N-panel. Screenshot by the author." width=80%}
+
+To test corrective behavior rather than only first-pass instruction, the user then performed the task incorrectly by changing the cube or material color instead of the light color. This is a useful stress test because it captures a realistic beginner confusion between object/material settings and light settings. The follow-up prompt was, "I changed the cube/material color instead of the light color. What did I do wrong, and how do I make the light itself blue?" Unlike Experiment 3, this task does not depend on Blender Info-history reconstruction; instead, it evaluates whether Suzanne can remain helpful once the user explicitly reports a mistaken intermediate step.
+
+![Experiment 4 screenshot showing the mistaken action state before Suzanne's correction.](images/experiment4_light_color_wrong_action.png){fig-cap="Experiment 4, part 2: The task is intentionally performed incorrectly by changing the wrong target before asking Suzanne for correction. Screenshot by the author." width=80%}
+
+![Experiment 4 screenshot showing Suzanne's corrective response after the user changed the wrong color setting.](images/experiment4_light_color_correction_response.png){fig-cap="Experiment 4, part 3: Suzanne diagnoses the mistake and redirects the user to the correct light settings. Screenshot by the author." width=80%}
+
+Suzanne's correction response explicitly identified the problem as changing the cube or its material rather than the light. It then restated the relevant fix as a short ordered procedure: select the light object, open the Properties panel, choose the light icon, find the `Color` field, and set it to blue. This is the behavior the experiment was designed to test. Suzanne did not merely repeat generic lighting advice; it acknowledged the user's reported mistake and redirected the workflow to the correct target.
+
+Table: Summary of Experiment 4
+
+| Aspect | Observation |
+|:--|:--|
+| Goal | Evaluate whether Suzanne can diagnose and correct a common novice mistake during a Blender lighting task |
+| Prompt | "I already added a light to my scene and selected it. How do I change the light's color to blue in Blender 5.0?" followed by "I changed the cube/material color instead of the light color. What did I do wrong, and how do I make the light itself blue?" |
+| Observed output | Suzanne first gave a correct light-color procedure, then identified the wrong target and redirected the user to the light settings |
+| Outcome | Successful as an error-recovery test |
+| Interpretation | Suzanne supported conversational troubleshooting by correcting a realistic workflow mistake rather than only answering the initial question |
+
+Methodologically, this experiment strengthens the thesis because it evaluates a different kind of usefulness from the previous three tasks. Experiment 1 showed that Suzanne can answer a short procedural question correctly. Experiment 2 showed that it can sustain a longer workflow explanation. Experiment 3 showed that it can use contextual signals to summarize recent actions. Experiment 4 adds a fourth dimension: corrective guidance after user error. In tutoring terms, that matters because helpful instructional systems do not only present the next step; they also help the learner recover when a superficially plausible but incorrect step has already been taken [@VanLEHN_2011; @Amershi_2019].
+
+At the same time, the evidence should be interpreted carefully. Suzanne did not independently inspect Blender state and discover the mistake on its own; the user described the mistake in the follow-up prompt. Even so, this is still meaningful evidence. Real help-seeking often takes exactly this form: a learner says what they tried, what happened, and what seems wrong. Suzanne's ability to convert that report into a targeted correction supports the thesis claim that in-viewport assistance can reduce micro-execution friction not only at task start, but also during troubleshooting.
+
+Together, the four experiments illustrate a clear progression of capability: basic question answering, longer procedural guidance for a complex task, context-aware interpretation of recent user actions, and conversational error recovery. That progression supports the thesis claim that Suzanne is not merely a generic chatbot embedded in Blender, but a more situated instructional assistant designed to reduce micro-execution friction inside the viewport.
+
 ### Cross-experiment comparison and trade-offs
 
-The three experiments can now be compared against the qualitative rubric to make their strengths and limits explicit.
+The four experiments can now be compared against the qualitative rubric to make their strengths and limits explicit.
 
 Table: Cross-experiment comparison using the qualitative rubric
 
@@ -223,8 +251,9 @@ Table: Cross-experiment comparison using the qualitative rubric
 | Experiment 1: Add a light | High | High | High | High | N/A |
 | Experiment 2: Fire simulation | Moderate | High | Moderate | High | N/A |
 | Experiment 3: Action reconstruction | High | Moderate | Moderate | High | High |
+| Experiment 4: Light-color correction | High | High | High | High | Moderate |
 
-Several patterns emerge from this comparison. First, Suzanne is strongest when the task is either short and well-bounded (Experiment 1) or clearly grounded in recent context (Experiment 3). Second, longer workflows remain useful but place pressure on the viewport as a delivery surface (Experiment 2). Third, transparency and user control remain consistently strong across all three experiments because the interface keeps output visible, never mutates the scene automatically, and gives the user time to inspect before acting.
+Several patterns emerge from this comparison. First, Suzanne is strongest when the task is short and well-bounded (Experiments 1 and 4) or clearly grounded in recent context (Experiment 3). Second, longer workflows remain useful but place pressure on the viewport as a delivery surface (Experiment 2). Third, corrective follow-up turns appear promising even without autonomous scene inspection, provided the user can clearly describe the mistake that occurred (Experiment 4). Fourth, transparency and user control remain consistently strong across all four experiments because the interface keeps output visible, never mutates the scene automatically, and gives the user time to inspect before acting.
 
 These results also show that "success" is not one-dimensional. A complex response can be valuable even when it is longer and harder to display compactly. A context-aware response can be valuable even when it is interpretive rather than directly executable. The rubric makes these differences visible and clarifies that Suzanne's main contribution is not perfect factual certainty in every case, but a combination of locality, actionability, inspectability, and bounded contextual help.
 
@@ -236,7 +265,9 @@ Experiment 2 maps to a different portfolio function: the production of a more te
 
 Experiment 3 corresponds to still another aspect of portfolio development: reflective process explanation. In many educational and professional settings, finished renders alone are not enough. Students are asked to show breakdowns, explain their workflow, discuss troubleshooting, or document how an artifact was created. Suzanne's ability to summarize recent actions from Blender context suggests that the assistant could eventually support not only execution but also retrospective explanation. That is especially relevant to portfolio-based learning, where process visibility and self-explanation are often part of evaluation [@lam2015assessment].
 
-These three mappings can be stated more directly as follows.
+Experiment 4 maps onto troubleshooting and iterative revision. Portfolio-oriented work is rarely linear; a learner may know the general effect they want, but still apply a change to the wrong object or panel along the way. Recovering quickly from those small mistakes can preserve momentum and reduce the discouragement that often comes from context-switching into external search. Suzanne's success in redirecting the user from object/material color back to light color therefore matters as evidence of instructional recovery, not just initial instruction.
+
+These four mappings can be stated more directly as follows.
 
 Table: Relationship between experiments and portfolio-oriented Blender work
 
@@ -245,6 +276,7 @@ Table: Relationship between experiments and portfolio-oriented Blender work
 | Experiment 1 | Basic scene setup and presentation | Supports readable renders and common beginner tasks | Fast, low-friction procedural reminder |
 | Experiment 2 | Multi-stage technical workflow | Supports more ambitious showcase pieces and simulations | Longer scaffold for dependent setup steps |
 | Experiment 3 | Reflective review and reconstruction | Supports process explanation, breakdowns, and troubleshooting | Context-aware summary of recent work |
+| Experiment 4 | Troubleshooting and iterative correction | Supports recovery from common novice mistakes during scene refinement | Conversational diagnosis and corrective guidance |
 
 This portfolio interpretation also helps clarify what the experiments do *not* claim. They do not show that Suzanne can make every user's art better, replace dedicated instruction, or eliminate the need for practice. They do not show that the resulting render quality is automatically improved or that creative judgment becomes easier. Instead, the evidence supports a narrower but still meaningful claim: Suzanne can reduce some of the operational friction surrounding the kinds of tasks learners must repeatedly complete if they want to build and explain finished Blender work.
 
@@ -260,11 +292,11 @@ RQ1 is answered positively. The software-verification layer shows that Suzanne's
 
 #### RQ2: Task support
 
-RQ2 is also supported by the task-based evaluation. Across the three experiments, Suzanne kept guidance inside Blender for a beginner lighting question, a longer fire-simulation workflow, and a context-aware explanation of recent user activity. In each case, the output was specific enough to support continued work in the viewport rather than forcing the user out to search for the next step elsewhere.
+RQ2 is also supported by the task-based evaluation. Across the four experiments, Suzanne kept guidance inside Blender for a beginner lighting question, a longer fire-simulation workflow, a context-aware explanation of recent user activity, and a corrective follow-up after a mistaken color adjustment. In each case, the output was specific enough to support continued work in the viewport rather than forcing the user out to search for the next step elsewhere.
 
 #### RQ3: Instructional clarity and context
 
-RQ3 is supported by the observed response quality. Suzanne's outputs were readable, step-oriented, and aligned with Blender terminology, and the third experiment showed that the system can incorporate recent Info-history context to produce situationally grounded guidance. Taken together, the experiments show that Suzanne is not only present in the interface, but capable of producing assistance that is concrete enough to be useful for learning-oriented work.
+RQ3 is supported by the observed response quality. Suzanne's outputs were readable, step-oriented, and aligned with Blender terminology. The third experiment showed that the system can incorporate recent Info-history context to produce situationally grounded guidance, while the fourth showed that it can also provide corrective follow-up guidance after a user-described mistake. Taken together, the experiments show that Suzanne is not only present in the interface, but capable of producing assistance that is concrete enough to be useful for learning-oriented work.
 
 ## Threats to Validity
 
@@ -278,7 +310,7 @@ Time-on-task and perceived trust are not directly measured in this chapter, so t
 
 ### External validity
 
-The selected tasks emphasize beginner and intermediate portfolio workflows. That is appropriate for Suzanne's scope, but it limits generalization. Results from lighting setup, fire simulation, and modeling-context reconstruction should not be overstated as evidence for advanced rigging, simulation pipelines, compositing, or studio-scale production work. Generalization is also constrained by Blender version, English-language UI assumptions, prompt phrasing, and local hardware differences.
+The selected tasks emphasize beginner and intermediate portfolio workflows. That is appropriate for Suzanne's scope, but it limits generalization. Results from lighting setup, light-color correction, fire simulation, and modeling-context reconstruction should not be overstated as evidence for advanced rigging, simulation pipelines, compositing, or studio-scale production work. Generalization is also constrained by Blender version, English-language UI assumptions, prompt phrasing, and local hardware differences.
 
 ### Conclusion validity
 
