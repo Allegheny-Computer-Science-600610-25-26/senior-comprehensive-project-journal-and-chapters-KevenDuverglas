@@ -2,7 +2,7 @@ name: Release Senior Thesis
 on:
   push:
     tags:
-      - '*.*.*'
+      - 'SeniorThesis-*'
 
 jobs:
   # Build job
