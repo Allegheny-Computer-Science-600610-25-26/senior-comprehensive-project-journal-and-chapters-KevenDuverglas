@@ -1,5 +1,5 @@
 ---
-title: "ReadyResearchers Template"
+title: "Suzanne Voice Assistant: Senior Project Journal"
 listing:
   - id: posts
     contents:
@@ -12,14 +12,6 @@ listing:
     sort-ui: false
     filter-ui: false
     fields: [title, date, description, categories, word-count, image]
-  - id: changelogs
-    contents: posts/changelogs
-    sort: "date desc"
-    type: grid
-    categories: false
-    sort-ui: false
-    filter-ui: false
-    fields: [title, date, description, categories, word-count, image, "Thesis Version", "Artifact Version"]
 page-layout: full
 title-block-banner: true
 ---
@@ -27,9 +19,4 @@ title-block-banner: true
 ## Posts
 
 :::{#posts}
-:::
-
-## Changelogs
-
-:::{#changelogs}
 :::

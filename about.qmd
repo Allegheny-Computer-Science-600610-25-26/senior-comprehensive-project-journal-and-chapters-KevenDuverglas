@@ -1,6 +1,6 @@
 ---
 title: "About"
-image: profile.jpg
+image: profile-screenshot.png
 about:
   template: jolla
   links:
@@ -11,3 +11,5 @@ about:
 ---
 
 About this blog
+
+This blog tracks my senior comprehensive project progress, including weekly updates, prototypes, and key decisions. I use it to document what I built, what worked, what did not, and what I learned while developing Blender tools like Suzanne Voice Assistant.
